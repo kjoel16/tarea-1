@@ -1,0 +1,28 @@
+using System.Text.RegularExpressions;
+using System.Reflection;
+
+public static string LimpiarCaracteresInvalidos(string input)
+{
+    if (string.IsNullOrEmpty(input))
+        return string.Empty;
+
+    // Elimina cualquier carácter que no sea imprimible o que esté fuera del rango ASCII extendido
+    return Regex.Replace(input, @"[^\u0020-\u007E\u00A1-\u00FF]", " ");
+}
+
+public static void LimpiarStrings(object obj)
+{
+    if (obj == null) return;
+
+    var propiedades = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(p => p.CanRead && p.CanWrite && p.PropertyType == typeof(string));
+
+    foreach (var prop in propiedades)
+    {
+        var valor = (string)prop.GetValue(obj);
+        if (!string.IsNullOrEmpty(valor))
+        {
+            prop.SetValue(obj, LimpiarCaracteresInvalidos(valor));
+        }
+    }
+}
