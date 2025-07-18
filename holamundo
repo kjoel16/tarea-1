@@ -1,33 +1,22 @@
-using System.Globalization;
-using System.Text;
 using System.Text.RegularExpressions;
+using System.Text;
 
-public static class As400Sanitizador
+public static string LimpiarConRegexMatch(string input)
 {
-    public static string LimpiarParaAS400(string input)
+    if (string.IsNullOrWhiteSpace(input)) return "";
+
+    // Lista blanca de caracteres permitidos (ajusta según lo que el AS400 soporte)
+    string patron = @"[a-zA-Z0-9\s\.,;:@#\-_!?()]+";
+
+    var matches = Regex.Matches(input, patron);
+    var sb = new StringBuilder();
+
+    foreach (Match match in matches)
     {
-        if (string.IsNullOrWhiteSpace(input))
-            return "";
-
-        // 1. Normalizar para eliminar acentos
-        string textoSinAcentos = input.Normalize(NormalizationForm.FormD);
-        var sb = new StringBuilder();
-
-        foreach (char c in textoSinAcentos)
-        {
-            UnicodeCategory cat = CharUnicodeInfo.GetUnicodeCategory(c);
-            if (cat != UnicodeCategory.NonSpacingMark)
-            {
-                sb.Append(c);
-            }
-        }
-
-        string limpio = sb.ToString();
-
-        // 2. Eliminar caracteres no imprimibles o no ASCII
-        limpio = Regex.Replace(limpio, @"[^a-zA-Z0-9\s\.,;:@#\-_]", "");
-
-        // 3. Trim opcional
-        return limpio.Trim();
+        sb.Append(match.Value);
     }
+
+    // Reemplaza espacios múltiples por uno
+    string limpio = Regex.Replace(sb.ToString(), @"\s+", " ");
+    return limpio.Trim();
 }
