@@ -32,3 +32,59 @@ public static class Sanitizer
         return cleaned;
     }
 }
+
+
+
+
+
+//// segundo cod
+
+
+
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.Reflection;
+
+public class SanitizeInputFilter : IActionFilter
+{
+    public void OnActionExecuting(ActionExecutingContext context)
+    {
+        foreach (var argument in context.ActionArguments)
+        {
+            if (argument.Value != null)
+            {
+                SanitizeObject(argument.Value);
+            }
+        }
+    }
+
+    public void OnActionExecuted(ActionExecutedContext context) { }
+
+    private void SanitizeObject(object obj)
+    {
+        if (obj == null) return;
+
+        var properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        foreach (var prop in properties)
+        {
+            if (!prop.CanRead || !prop.CanWrite) continue;
+
+            if (prop.PropertyType == typeof(string))
+            {
+                var value = (string)prop.GetValue(obj);
+                if (!string.IsNullOrEmpty(value))
+                {
+                    prop.SetValue(obj, Sanitizer.Clean(value));
+                }
+            }
+            else if (!prop.PropertyType.IsPrimitive &&
+                     !prop.PropertyType.IsEnum &&
+                     prop.PropertyType != typeof(DateTime) &&
+                     prop.PropertyType != typeof(decimal))
+            {
+                var nestedObj = prop.GetValue(obj);
+                SanitizeObject(nestedObj);
+            }
+        }
+    }
+}
