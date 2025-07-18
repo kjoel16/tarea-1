@@ -1,28 +1,33 @@
+using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
-using System.Reflection;
 
-public static string LimpiarCaracteresInvalidos(string input)
+public static class As400Sanitizador
 {
-    if (string.IsNullOrEmpty(input))
-        return string.Empty;
-
-    // Elimina cualquier carácter que no sea imprimible o que esté fuera del rango ASCII extendido
-    return Regex.Replace(input, @"[^\u0020-\u007E\u00A1-\u00FF]", " ");
-}
-
-public static void LimpiarStrings(object obj)
-{
-    if (obj == null) return;
-
-    var propiedades = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        .Where(p => p.CanRead && p.CanWrite && p.PropertyType == typeof(string));
-
-    foreach (var prop in propiedades)
+    public static string LimpiarParaAS400(string input)
     {
-        var valor = (string)prop.GetValue(obj);
-        if (!string.IsNullOrEmpty(valor))
+        if (string.IsNullOrWhiteSpace(input))
+            return "";
+
+        // 1. Normalizar para eliminar acentos
+        string textoSinAcentos = input.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder();
+
+        foreach (char c in textoSinAcentos)
         {
-            prop.SetValue(obj, LimpiarCaracteresInvalidos(valor));
+            UnicodeCategory cat = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (cat != UnicodeCategory.NonSpacingMark)
+            {
+                sb.Append(c);
+            }
         }
+
+        string limpio = sb.ToString();
+
+        // 2. Eliminar caracteres no imprimibles o no ASCII
+        limpio = Regex.Replace(limpio, @"[^a-zA-Z0-9\s\.,;:@#\-_]", "");
+
+        // 3. Trim opcional
+        return limpio.Trim();
     }
 }
