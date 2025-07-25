@@ -1,90 +1,27 @@
-using System.Globalization;
-using System.Text;
-using System.Text.RegularExpressions;
 
-public static class Sanitizer
-{
-    private static readonly Regex _specialCharsRegex = new Regex(@"[^a-zA-Z0-9\s]", RegexOptions.Compiled);
-    private static readonly Regex _multiSpaceRegex = new Regex(@"\s{2,}", RegexOptions.Compiled);
+Dcl-Proc pDia_Semana;
 
-    public static string Clean(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input)) return input;
+   Dcl-Pi *N End-Pi;
 
-        // 1. Quitar acentos (ñ y ç se conservan)
-        var normalized = input.Normalize(NormalizationForm.FormD);
-        var sb = new StringBuilder();
-        foreach (var c in normalized)
-        {
-            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
-            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
-                sb.Append(c);
-        }
+   Dcl-S FechaTP     Zoned(8:0);      // Supón que este valor ya está cargado, en formato YYYYMMDD
+   Dcl-S FechaISO    Char(10);
+   Dcl-S FecIni      Date;
+   Dcl-S Diatem      Uns(1);          // Día de la semana (1=lunes, 7=domingo)
 
-        string withoutAccents = sb.ToString().Normalize(NormalizationForm.FormC);
+   // Convertir FechaTP (ej. 20250701) a formato ISO string
+   FechaISO = %Subst(%EditC(FechaTP:'X'):1:4) + '-' +
+              %Subst(%EditC(FechaTP:'X'):5:2) + '-' +
+              %Subst(%EditC(FechaTP:'X'):7:2);
 
-        // 2. Eliminar caracteres especiales
-        string cleaned = _specialCharsRegex.Replace(withoutAccents, "");
+   // Convertir string a tipo fecha
+   FecIni = %Date(FechaISO: *ISO);
 
-        // 3. Normalizar espacios múltiples
-        cleaned = _multiSpaceRegex.Replace(cleaned, " ").Trim();
+   // Obtener día de la semana: 1=lunes ... 7=domingo
+   Diatem = %Subdt(FecIni: *DOW);
 
-        return cleaned;
-    }
-}
+   // (Opcional) si deseas que domingo sea 0
+   If Diatem = 7;
+      Diatem = 0;
+   EndIf;
 
-
-
-
-
-//// segundo cod
-
-
-
-using Microsoft.AspNetCore.Mvc.Filters;
-using System.Reflection;
-
-public class SanitizeInputFilter : IActionFilter
-{
-    public void OnActionExecuting(ActionExecutingContext context)
-    {
-        foreach (var argument in context.ActionArguments)
-        {
-            if (argument.Value != null)
-            {
-                SanitizeObject(argument.Value);
-            }
-        }
-    }
-
-    public void OnActionExecuted(ActionExecutedContext context) { }
-
-    private void SanitizeObject(object obj)
-    {
-        if (obj == null) return;
-
-        var properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-        foreach (var prop in properties)
-        {
-            if (!prop.CanRead || !prop.CanWrite) continue;
-
-            if (prop.PropertyType == typeof(string))
-            {
-                var value = (string)prop.GetValue(obj);
-                if (!string.IsNullOrEmpty(value))
-                {
-                    prop.SetValue(obj, Sanitizer.Clean(value));
-                }
-            }
-            else if (!prop.PropertyType.IsPrimitive &&
-                     !prop.PropertyType.IsEnum &&
-                     prop.PropertyType != typeof(DateTime) &&
-                     prop.PropertyType != typeof(decimal))
-            {
-                var nestedObj = prop.GetValue(obj);
-                SanitizeObject(nestedObj);
-            }
-        }
-    }
-}
+End-Proc;
