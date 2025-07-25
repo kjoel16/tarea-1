@@ -1,27 +1,19 @@
+**FREE
 
-Dcl-Proc pDia_Semana;
+Dcl-Pr CALENDAR01 ExtPgm('CALENDAR01');
+   FecDmy Char(8);
+   FecYmd Char(8);
+End-Pr;
 
-   Dcl-Pi *N End-Pi;
+Dcl-S FecDmy Char(8);
+Dcl-S FecYmd Char(8);
 
-   Dcl-S FechaTP     Zoned(8:0);      // Supón que este valor ya está cargado, en formato YYYYMMDD
-   Dcl-S FechaISO    Char(10);
-   Dcl-S FecIni      Date;
-   Dcl-S Diatem      Uns(1);          // Día de la semana (1=lunes, 7=domingo)
+// Llamar al calendario (asumimos que setea FecDmy y FecYmd internamente)
+CallP CALENDAR01(FecDmy: FecYmd);
 
-   // Convertir FechaTP (ej. 20250701) a formato ISO string
-   FechaISO = %Subst(%EditC(FechaTP:'X'):1:4) + '-' +
-              %Subst(%EditC(FechaTP:'X'):5:2) + '-' +
-              %Subst(%EditC(FechaTP:'X'):7:2);
+// Mostrar resultados
+Dsply ('FecDmy: ' + FecDmy);
+Dsply ('FecYmd: ' + FecYmd);
 
-   // Convertir string a tipo fecha
-   FecIni = %Date(FechaISO: *ISO);
-
-   // Obtener día de la semana: 1=lunes ... 7=domingo
-   Diatem = %Subdt(FecIni: *DOW);
-
-   // (Opcional) si deseas que domingo sea 0
-   If Diatem = 7;
-      Diatem = 0;
-   EndIf;
-
-End-Proc;
+*Inlr = *On;
+Return;
