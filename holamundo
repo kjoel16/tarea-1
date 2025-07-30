@@ -1,19 +1,20 @@
-**FREE
+public static class ConnectionConfig
+{
+    public static TokenRequest GetJwtConsumir(string environment = "DEV")
+    {
+        string jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ConnectionData.json");
+        string jsonText = File.ReadAllText(jsonPath);
 
-Dcl-Pr CALENDAR01 ExtPgm('CALENDAR01');
-   FecDmy Char(8);
-   FecYmd Char(8);
-End-Pr;
+        var allConfig = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(jsonText);
 
-Dcl-S FecDmy Char(8);
-Dcl-S FecYmd Char(8);
+        if (allConfig.TryGetValue(environment, out var envSettings) &&
+            envSettings.TryGetValue("JWTConsumir", out var jwtConsumirRaw))
+        {
+            var jsonJwt = jwtConsumirRaw.ToString();
+            var jwtConfig = JsonSerializer.Deserialize<TokenRequest>(jsonJwt);
+            return jwtConfig;
+        }
 
-// Llamar al calendario (asumimos que setea FecDmy y FecYmd internamente)
-CallP CALENDAR01(FecDmy: FecYmd);
-
-// Mostrar resultados
-Dsply ('FecDmy: ' + FecDmy);
-Dsply ('FecYmd: ' + FecYmd);
-
-*Inlr = *On;
-Return;
+        throw new Exception("No se pudo obtener la configuración JWTConsumir.");
+    }
+}
