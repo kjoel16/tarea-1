@@ -1,21 +1,141 @@
-public async Task<TokenResponse> ObtenerTokenAsync()
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using MS_BAN_64_BuzonInteligente.Models.Dtos.CashBalance;
+
+namespace MS_BAN_64_BuzonInteligente.Controllers
 {
-    var config = ConnectionConfig.GetJwtConsumir(); // Cargar del JSON
-
-    var payload = new
+    [ApiController]
+    [Route("api/[controller]")]
+    public class CashBalanceController : ControllerBase
     {
-        Client_id = config.client_id,
-        Client_secret = config.client_secret,
-        Grant_type = config.grant_type,
-        Scope = config.scope
-    };
+        [HttpPost("ConsultarBalance")]
+        public async Task<IActionResult> ConsultarBalance([FromBody] CashBalanceRequest request)
+        {
+            if (request == null)
+                return BadRequest("El request está vacío.");
 
-    var response = await _httpClient.PostAsJsonAsync(config.Host, payload); // ← Envía como JSON
+            var includeDetails = request.Options?[0]?.DetailedBalance == true || request.Options?[0]?.DetailedTransactions == true;
 
-    response.EnsureSuccessStatusCode();
+            var response = new CashBalanceResponse
+            {
+                Result = "0",
+                CountryId = request.CountryId,
+                Balances = new Balances
+                {
+                    Balance = new List<Balance>()
+                }
+            };
 
-    var json = await response.Content.ReadAsStringAsync();
-    var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(json);
+            if (includeDetails)
+            {
+                response.Balances.Balance.Add(new Balance
+                {
+                    BalanceType = "Total",
+                    DeviceCode = request.Device[0].Code,
+                    DateBalance = "2022-09-08T09:40:00+01:00",
+                    Currency = new List<Currency>
+                    {
+                        new Currency
+                        {
+                            Code = "EUR",
+                            Amount = 1234000,
+                            Denominations = new Denominations
+                            {
+                                Denomination = new List<Denomination>
+                                {
+                                    new Denomination { Value = 100, Quantity = 0, Amount = 0, Type = "COIN" },
+                                    new Denomination { Value = 10000, Quantity = 1114, Amount = 11140000, Type = "NOTE" }
+                                }
+                            }
+                        }
+                    }
+                });
 
-    return tokenResponse;
+                response.Balances.Balance.Add(new Balance
+                {
+                    BalanceType = "CashOut",
+                    DeviceCode = request.Device[0].Code,
+                    DateBalance = "2022-09-08T09:25:00+01:00",
+                    Currency = new List<Currency>
+                    {
+                        new Currency
+                        {
+                            Code = "EUR",
+                            Amount = 10000,
+                            Denominations = new Denominations
+                            {
+                                Denomination = new List<Denomination>
+                                {
+                                    new Denomination { Value = 5000, Quantity = 2, Amount = 10000, Type = "NOTE" }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                response.Transactions = new Transactions
+                {
+                    DeviceCode = request.Device[0].Code,
+                    DateBalance = "2022-09-08T09:40:00+01:00",
+                    Transaction = new List<Transaction>
+                    {
+                        new Transaction
+                        {
+                            ActualId = "20220907090000_QA0013000170_BBALANCE_1",
+                            TransactonDate = "2022-09-07T08:00:00+01:00",
+                            ServicePoint = null,
+                            ReceiptNumber = "",
+                            CashierId = "003",
+                            CashierName = "usuario_prosegur_rest",
+                            TipoTrans = "BBALANCE",
+                            Currency = new List<Currency>
+                            {
+                                new Currency
+                                {
+                                    Code = "EUR",
+                                    Amount = 220000,
+                                    Denominations = new Denominations
+                                    {
+                                        Denomination = new List<Denomination>
+                                        {
+                                            new Denomination { Value = 2000, Quantity = 10, Amount = 20000, Type = "NOTE" },
+                                            new Denomination { Value = 10000, Quantity = 20, Amount = 200000, Type = "NOTE" }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        new Transaction
+                        {
+                            ActualId = "20220907090000_QA0013000170_BBALANCE_2",
+                            TransactonDate = "2022-09-07T08:00:00+01:00",
+                            ServicePoint = null,
+                            ReceiptNumber = "",
+                            CashierId = "003",
+                            CashierName = "usuario_prosegur_rest",
+                            Currency = new List<Currency>
+                            {
+                                new Currency
+                                {
+                                    Code = "EUR",
+                                    Amount = 15000,
+                                    Denominations = new Denominations
+                                    {
+                                        Denomination = new List<Denomination>
+                                        {
+                                            new Denomination { Value = 5000, Quantity = 3, Amount = 15000, Type = "NOTE" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+            }
+
+            return Ok(response);
+        }
+    }
 }
