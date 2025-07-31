@@ -1,71 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text.Json;
-using System.Threading.Tasks;
-using MS_BAN_64_BuzonInteligente.Models.Dtos.Monodivisa.Request;
-using MS_BAN_64_BuzonInteligente.Models.Dtos.Monodivisa.Response;
-using MS_BAN_64_BuzonInteligente.Models.Dtos.TokenExp;
-using MS_BAN_64_BuzonInteligente.Service;
-using MS_BAN_64_BuzonInteligente.Utils;
-
-public class MonodivisasMultidivisasSrv : IMonodivisasMultidivisas
+public async Task<TokenResponse> ObtenerTokenAsync()
 {
-    private readonly Connector conexion = new();
-    private readonly Stopwatch _appTimer;
+    var config = ConnectionConfig.GetJwtConsumir(); // Cargar del JSON
 
-    public MonodivisasMultidivisasSrv(Stopwatch appTimer)
+    var payload = new
     {
-        _appTimer = appTimer;
-    }
+        Client_id = config.client_id,
+        Client_secret = config.client_secret,
+        Grant_type = config.grant_type,
+        Scope = config.scope
+    };
 
-    public async Task<ResponseModelMonodivisa> ConsultarBuzonAsync(RequestModelMonodivisa request)
-    {
-        _appTimer.Restart(); // Inicia temporizador
+    var response = await _httpClient.PostAsJsonAsync(config.Host, payload); // ← Envía como JSON
 
-        // Leer configuración de conexión
-        var config = ConnectionConfig.GetJwtConsumir(); // Lee desde ConnectionData.json
+    response.EnsureSuccessStatusCode();
 
-        // Generar token
-        var authService = new AuthService();
-        TokenResponse tokenResult = await authService.GenerateTokenAsync();
+    var json = await response.Content.ReadAsStringAsync();
+    var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(json);
 
-        string token = tokenResult.access_token;
-
-        // Configurar cliente HTTP con token
-        var client = new HttpClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        // Generar nueva sesión y agregar al request
-        string idSession = Guid.NewGuid().ToString();
-        request.Header.HSessionID = idSession;
-
-        // Hacer llamada al servicio
-        var response = await client.PostAsJsonAsync($"{config.host}/buzon", request);
-        response.EnsureSuccessStatusCode();
-
-        var consultarBuzonResponse = await response.Content.ReadFromJsonAsync<List<ResponseMonodivisa>>();
-
-        _appTimer.Stop(); // Detener temporizador
-
-        // Devolver respuesta estructurada
-        return new ResponseModelMonodivisa
-        {
-            Header = new ResponseHeader
-            {
-                RequestHeader = request.Header,
-                ProcessingTime = $"{_appTimer.Elapsed.Minutes} minutos, {_appTimer.Elapsed.Seconds} segundos"
-            },
-            Data = new ResponseCashBalance
-            {
-                CashBalanceResponse = new ResponseMonodivisa
-                {
-                    Transactions = consultarBuzonResponse
-                }
-            }
-        };
-    }
+    return tokenResponse;
 }
