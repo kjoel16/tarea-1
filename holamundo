@@ -1,43 +1,80 @@
-if (includeDetails)
+public bool MonodivisasMultidivisasResp(ConsultarBuzonResponse consultarBuzonResponse, RequestHeader requestHeader)
 {
-    response.Balances = new ResponseBalance
+    try
     {
-        Balance = new[]
+        var codigo = consultarBuzonResponse.errores;
+        string StatusCode = codigo.Count == 0 ? "200" : "400";
+        string Message = codigo.Count == 0 ? "Consulta Exitosa" : "Error en la consulta";
+        var errores = codigo.Count == 0 ? null : codigo[0];
+
+        var hUserId = requestHeader.HUserId;
+        var hProvider = requestHeader.HProvider;
+        var hSessionId = requestHeader.HSessionId;
+        var hClientIp = requestHeader.HClientIp;
+        var timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+        var responseId = Guid.NewGuid().ToString();
+        var processingTime = $"{_appTimer.Elapsed.Minutes}m {_appTimer.Elapsed.Seconds}s";
+        var traceId = "trace-001";
+        var httpCode = StatusCode;
+        var systemMsg = Message;
+        var errorMsg = errores?.Message ?? "";
+
+        var valuesList = new List<string>();
+        int balanceIndex = 0;
+
+        foreach (var balance in consultarBuzonResponse.Balances.Balance)
         {
-            new Balances
+            int currencyIndex = 0;
+            foreach (var currency in balance.Currencys)
             {
-                BalanceType = "Total",
-                DeviceCode = request.Device[0].Code,
-                DateBalance = "2022-09-08T09:40:00+01:00",
-                Currencys = new[]
+                foreach (var denom in currency.Denominations.Denomination)
                 {
-                    new Currency
+                    foreach (var trans in consultarBuzonResponse.Transactions.Transaction)
                     {
-                        Code = "EUR",
-                        Amount = "1234000",
-                        Denominations = new ResponseDenominations
-                        {
-                            Denomination = new[]
-                            {
-                                new Denominations
-                                {
-                                    Value = "100",
-                                    Quantity = "0",
-                                    Amount = "0",
-                                    Type = "COIN"
-                                },
-                                new Denominations
-                                {
-                                    Value = "10000",
-                                    Quantity = "1114",
-                                    Amount = "11140000",
-                                    Type = "NOTE"
-                                }
-                            }
-                        }
+                        string row = $"('{hUserId}', '{hProvider}', '{hSessionId}', '{hClientIp}', '{timestamp}', " +
+                                     $"'{responseId}', '{timestamp}', '{processingTime}', '{StatusCode}', '{Message}', " +
+                                     $"'{traceId}', '{httpCode}', '{systemMsg}', '{errorMsg}', " +
+                                     $"'{currency.Code}', '{consultarBuzonResponse.CountryId}', '{balanceIndex}', '{balance.BalanceType}', " +
+                                     $"'{balance.DeviceCode}', '{balance.DateBalance}', '{balance.DeviceCode}', '{currencyIndex}', '{currency.Code}', " +
+                                     $"'{denom.Value}', '{denom.Quantity}', '{denom.Amount}', '{denom.Type}', " +
+                                     $"'{trans.ActualId}', '{trans.TransactonDate}', '{trans.ServicePoint}', '{trans.ReceiptNumber}', " +
+                                     $"'{trans.CashierId}', '{trans.CashierName}', '{trans.TipoTrans}')";
+                        valuesList.Add(row);
                     }
+                }
+                currencyIndex++;
+            }
+            balanceIndex++;
+        }
+
+        if (valuesList.Any())
+        {
+            string insertQuery = @"
+                INSERT INTO BuzonCashBalance (
+                    BZI05HUSID, BZI06HPROV, BZI07HSESS, BZI08HCLIP, BZI09HTIME,
+                    BZI10RPID, BZI11MTTP, BZI12PRTM, BZI13STCD, BZI14MSGC,
+                    BZI15TRID, BZI16BCHT, BZI17MSGS, BZI18TPDV,
+                    BZI21CDPA, BZI22RESU, BZI23BALA, BZI24TIPO,
+                    BZI25CDHB, BZI26FECB, BZI27CDDB, BZI28RAMO, BZI29CODM,
+                    BZI30VAL, BZI31QTY, BZI32AMT, BZI33TYP,
+                    BZI34ACID, BZI35TRDT, BZI36SPNT, BZI37RCPT,
+                    BZI38CAID, BZI39CANA, BZI40TIPTR
+                ) VALUES " + string.Join(",", valuesList);
+
+            connection.Open();
+            if (connection.Connect.CheckConfigurationState && codigo.Count == 0)
+            {
+                using (var command = new OleDbCommand(insertQuery, connection.Connect.OleDbConnection))
+                {
+                    int result = command.ExecuteNonQuery();
+                    return result > 0;
                 }
             }
         }
-    };
+        return false;
+    }
+    catch (Exception)
+    {
+        return false;
+    }
 }
