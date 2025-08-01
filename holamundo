@@ -1,11 +1,14 @@
-public bool MonodivisasMultidivisasResp(ConsultarBuzonResponse consultarBuzonResponse, RequestHeader requestHeader)
+public bool MonodivisasMultidivisasResp(ResponseMonodivisa consultarBuzonResponse, RequestHeader requestHeader)
 {
     try
     {
-        var codigo = consultarBuzonResponse.errores;
-        string StatusCode = codigo.Count == 0 ? "200" : "400";
-        string Message = codigo.Count == 0 ? "Consulta Exitosa" : "Error en la consulta";
-        var errores = codigo.Count == 0 ? null : codigo[0];
+        // Valores en duro para pruebas (sin extraer errores aún)
+        string StatusCode = "200";
+        string Message = "Consulta Exitosa";
+        string traceId = "trace-001";
+        string httpCode = "200";
+        string systemMsg = "OK";
+        string errorMsg = "";
 
         var hUserId = requestHeader.HUserId;
         var hProvider = requestHeader.HProvider;
@@ -14,10 +17,6 @@ public bool MonodivisasMultidivisasResp(ConsultarBuzonResponse consultarBuzonRes
         var timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
         var responseId = Guid.NewGuid().ToString();
         var processingTime = $"{_appTimer.Elapsed.Minutes}m {_appTimer.Elapsed.Seconds}s";
-        var traceId = "trace-001";
-        var httpCode = StatusCode;
-        var systemMsg = Message;
-        var errorMsg = errores?.Message ?? "";
 
         var valuesList = new List<string>();
         int balanceIndex = 0;
@@ -62,7 +61,7 @@ public bool MonodivisasMultidivisasResp(ConsultarBuzonResponse consultarBuzonRes
                 ) VALUES " + string.Join(",", valuesList);
 
             connection.Open();
-            if (connection.Connect.CheckConfigurationState && codigo.Count == 0)
+            if (connection.Connect.CheckConfigurationState)
             {
                 using (var command = new OleDbCommand(insertQuery, connection.Connect.OleDbConnection))
                 {
