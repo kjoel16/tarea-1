@@ -2,14 +2,6 @@ public bool MonodivisasMultidivisasResp(ResponseMonodivisa consultarBuzonRespons
 {
     try
     {
-        // Valores en duro para pruebas (sin extraer errores aún)
-        string StatusCode = "200";
-        string Message = "Consulta Exitosa";
-        string traceId = "trace-001";
-        string httpCode = "200";
-        string systemMsg = "OK";
-        string errorMsg = "";
-
         var hUserId = requestHeader.HUserId;
         var hProvider = requestHeader.HProvider;
         var hSessionId = requestHeader.HSessionId;
@@ -18,62 +10,97 @@ public bool MonodivisasMultidivisasResp(ResponseMonodivisa consultarBuzonRespons
         var responseId = Guid.NewGuid().ToString();
         var processingTime = $"{_appTimer.Elapsed.Minutes}m {_appTimer.Elapsed.Seconds}s";
 
-        var valuesList = new List<string>();
-        int balanceIndex = 0;
+        var traceId = "trace-001";
+        var httpCode = "200";
+        var systemMsg = "Consulta Exitosa";
+        var errorMsg = "";
+        var statusCode = "200";
+        var message = "Consulta Exitosa";
 
-        foreach (var balance in consultarBuzonResponse.Balances.Balance)
+        var datos = consultarBuzonResponse?.Balances?.Balance;
+        if (datos == null || datos.Length == 0)
+            return false;
+
+        connection.Open();
+        if (!connection.Connect.CheckConfigurationState)
+            return false;
+
+        foreach (var balance in datos)
         {
-            int currencyIndex = 0;
             foreach (var currency in balance.Currencys)
             {
                 foreach (var denom in currency.Denominations.Denomination)
                 {
                     foreach (var trans in consultarBuzonResponse.Transactions.Transaction)
                     {
-                        string row = $"('{hUserId}', '{hProvider}', '{hSessionId}', '{hClientIp}', '{timestamp}', " +
-                                     $"'{responseId}', '{timestamp}', '{processingTime}', '{StatusCode}', '{Message}', " +
-                                     $"'{traceId}', '{httpCode}', '{systemMsg}', '{errorMsg}', " +
-                                     $"'{currency.Code}', '{consultarBuzonResponse.CountryId}', '{balanceIndex}', '{balance.BalanceType}', " +
-                                     $"'{balance.DeviceCode}', '{balance.DateBalance}', '{balance.DeviceCode}', '{currencyIndex}', '{currency.Code}', " +
-                                     $"'{denom.Value}', '{denom.Quantity}', '{denom.Amount}', '{denom.Type}', " +
-                                     $"'{trans.ActualId}', '{trans.TransactonDate}', '{trans.ServicePoint}', '{trans.ReceiptNumber}', " +
-                                     $"'{trans.CashierId}', '{trans.CashierName}', '{trans.TipoTrans}')";
-                        valuesList.Add(row);
+                        string sqlQuery = @"
+                            INSERT INTO BUZONINTELIGENTE.BUZONCASHBALANCE (
+                                BZI05HUSID, BZI06HPROV, BZI07HSESS, BZI08HCLIP, BZI09HTIME,
+                                BZI10RPID, BZI11MTTP, BZI12PRTM, BZI13STCD, BZI14MSGC,
+                                BZI15TRID, BZI16BCHT, BZI17MSGS, BZI18TPDV,
+                                BZI21CDPA, BZI22RESU, BZI23BALA, BZI24TIPO,
+                                BZI25CDHB, BZI26FECB, BZI27CDDB, BZI28RAMO, BZI29CODM,
+                                BZI30VAL, BZI31QTY, BZI32AMT, BZI33TYP,
+                                BZI34ACID, BZI35TRDT, BZI36SPNT, BZI37RCPT,
+                                BZI38CAID, BZI39CANA, BZI40TIPTR
+                            ) VALUES (
+                                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+                            )";
+
+                        using (OleDbCommand command = new OleDbCommand(sqlQuery, connection.Connect.OleDbConnection))
+                        {
+                            command.CommandType = CommandType.Text;
+                            command.Parameters.AddWithValue("@BZI05HUSID", hUserId);
+                            command.Parameters.AddWithValue("@BZI06HPROV", hProvider);
+                            command.Parameters.AddWithValue("@BZI07HSESS", hSessionId);
+                            command.Parameters.AddWithValue("@BZI08HCLIP", hClientIp);
+                            command.Parameters.AddWithValue("@BZI09HTIME", timestamp);
+                            command.Parameters.AddWithValue("@BZI10RPID", responseId);
+                            command.Parameters.AddWithValue("@BZI11MTTP", timestamp);
+                            command.Parameters.AddWithValue("@BZI12PRTM", processingTime);
+                            command.Parameters.AddWithValue("@BZI13STCD", statusCode);
+                            command.Parameters.AddWithValue("@BZI14MSGC", message);
+                            command.Parameters.AddWithValue("@BZI15TRID", traceId);
+                            command.Parameters.AddWithValue("@BZI16BCHT", httpCode);
+                            command.Parameters.AddWithValue("@BZI17MSGS", systemMsg);
+                            command.Parameters.AddWithValue("@BZI18TPDV", errorMsg);
+
+                            command.Parameters.AddWithValue("@BZI21CDPA", currency.Code);
+                            command.Parameters.AddWithValue("@BZI22RESU", consultarBuzonResponse.CountryId);
+                            command.Parameters.AddWithValue("@BZI23BALA", balance.BalanceType);
+                            command.Parameters.AddWithValue("@BZI24TIPO", balance.BalanceType);
+                            command.Parameters.AddWithValue("@BZI25CDHB", balance.DeviceCode);
+                            command.Parameters.AddWithValue("@BZI26FECB", balance.DateBalance);
+                            command.Parameters.AddWithValue("@BZI27CDDB", balance.DeviceCode);
+                            command.Parameters.AddWithValue("@BZI28RAMO", currency.Code);
+                            command.Parameters.AddWithValue("@BZI29CODM", currency.Code);
+
+                            command.Parameters.AddWithValue("@BZI30VAL", denom.Value);
+                            command.Parameters.AddWithValue("@BZI31QTY", denom.Quantity);
+                            command.Parameters.AddWithValue("@BZI32AMT", denom.Amount);
+                            command.Parameters.AddWithValue("@BZI33TYP", denom.Type);
+
+                            command.Parameters.AddWithValue("@BZI34ACID", trans.ActualId);
+                            command.Parameters.AddWithValue("@BZI35TRDT", trans.TransactonDate);
+                            command.Parameters.AddWithValue("@BZI36SPNT", trans.ServicePoint);
+                            command.Parameters.AddWithValue("@BZI37RCPT", trans.ReceiptNumber);
+                            command.Parameters.AddWithValue("@BZI38CAID", trans.CashierId);
+                            command.Parameters.AddWithValue("@BZI39CANA", trans.CashierName);
+                            command.Parameters.AddWithValue("@BZI40TIPTR", trans.TipoTrans);
+
+                            int result = command.ExecuteNonQuery();
+                            if (result <= 0) return false;
+                        }
                     }
                 }
-                currencyIndex++;
-            }
-            balanceIndex++;
-        }
-
-        if (valuesList.Any())
-        {
-            string insertQuery = @"
-                INSERT INTO BuzonCashBalance (
-                    BZI05HUSID, BZI06HPROV, BZI07HSESS, BZI08HCLIP, BZI09HTIME,
-                    BZI10RPID, BZI11MTTP, BZI12PRTM, BZI13STCD, BZI14MSGC,
-                    BZI15TRID, BZI16BCHT, BZI17MSGS, BZI18TPDV,
-                    BZI21CDPA, BZI22RESU, BZI23BALA, BZI24TIPO,
-                    BZI25CDHB, BZI26FECB, BZI27CDDB, BZI28RAMO, BZI29CODM,
-                    BZI30VAL, BZI31QTY, BZI32AMT, BZI33TYP,
-                    BZI34ACID, BZI35TRDT, BZI36SPNT, BZI37RCPT,
-                    BZI38CAID, BZI39CANA, BZI40TIPTR
-                ) VALUES " + string.Join(",", valuesList);
-
-            connection.Open();
-            if (connection.Connect.CheckConfigurationState)
-            {
-                using (var command = new OleDbCommand(insertQuery, connection.Connect.OleDbConnection))
-                {
-                    int result = command.ExecuteNonQuery();
-                    return result > 0;
-                }
             }
         }
-        return false;
+
+        return true;
     }
-    catch (Exception)
+    catch (Exception ex)
     {
+        // log opcional
         return false;
     }
 }
