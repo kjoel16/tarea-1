@@ -1,0 +1,5 @@
+El acceso a este endpoint es indispensable para la autenticación y autorización de aplicaciones que consumen servicios de la plataforma Microsoft Azure/Entra ID mediante el protocolo OAuth 2.0.
+
+Nuestra aplicación/proceso requiere obtener un token de acceso seguro desde el servicio de identidad de Microsoft (login.microsoftonline.com), el cual se utiliza para integrarse con [indicar el sistema/plataforma, ej. Microsoft Graph API, plataforma corporativa XYZ, servicio protegido por Azure].
+
+Sin esta conexión, no es posible establecer el flujo de autenticación ni consumir de forma segura los recursos necesarios, lo que impacta directamente en la operación y en la continuidad del proyecto.
