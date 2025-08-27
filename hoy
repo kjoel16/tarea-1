@@ -1,68 +1,3 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Text.Json;
-
-// using ... tus namespaces (LoggingActionFilter, servicios, etc.)
-// using MS_BAN_64.BuzonInteligente; // si tu LoggingActionFilter está aquí
-// using MS_BAN_64.BuzonInteligente.Service; // AuthService/IAuthService
-
-var builder = WebApplication.CreateBuilder(args);
-
-// ---------------- Controllers + Filtro de logging ----------------
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<LoggingActionFilter>();
-builder.Services.AddControllers(o => o.Filters.Add<LoggingActionFilter>());
-
-// ---------------- Swagger + Bearer ----------------
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "MS_BAN_64 API", Version = "v1" });
-
-    c.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT en header. Ej: 'Bearer {token}'",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "bearer" }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
-
-// ---------------- JWT interno ----------------
-var jwtSection = builder.Configuration.GetSection("DEV:JWTExpone");
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSection["Issuer"],
-            ValidAudience = jwtSection["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!))
-        };
-    });
-
-// ---------------- HttpClient mTLS (por SubjectName) ----------------
 builder.Services.AddHttpClient("mtls")
     .ConfigurePrimaryHttpMessageHandler(sp =>
     {
@@ -71,70 +6,25 @@ builder.Services.AddHttpClient("mtls")
         var handler = new HttpClientHandler
         {
             ClientCertificateOptions = ClientCertificateOptions.Manual,
-            SslProtocols = SslProtocols.Tls12 // típico en bancos
+            SslProtocols = System.Security.Authentication.SslProtocols.Tls12
         };
 
-        handler.ClientCertificates.Add(LoadFromStoreBySubjectName(cfg));
+        // Certificado de CLIENTE (mTLS) - ya lo estás cargando por SubjectName/Thumbprint
+        handler.ClientCertificates.Add(LoadFromStoreBySubjectName(cfg)); // tu helper
+
+        // --- Pinning del SERVIDOR (solo temporal) ---
+        var expectedThumbprint = (cfg["ServerCert:Thumbprint"] ?? "").Replace(" ", "").ToUpperInvariant();
+
+        handler.ServerCertificateCustomValidationCallback = (req, cert, chain, errors) =>
+        {
+            // Si todo es válido, perfecto
+            if (errors == System.Net.Security.SslPolicyErrors.None)
+                return true;
+
+            // Si hay NameMismatch/ChainErrors, aceptamos solo si coincide la huella esperada
+            var serverTp = cert?.GetCertHashString()?.Replace(" ", "")?.ToUpperInvariant();
+            return !string.IsNullOrEmpty(expectedThumbprint) && serverTp == expectedThumbprint;
+        };
+
         return handler;
     });
-
-// ---------------- Tus servicios ----------------
-builder.Services.AddScoped<IAuthService, AuthService>();
-// builder.Services.AddScoped<ITuServicio, TuServicio>();
-
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
-// Endpoint opcional para probar la llamada externa
-app.MapPost("/obtener-token-externo", async (IAuthService auth) =>
-{
-    var token = await auth.ObtenerTokenAsync();
-    return Results.Ok(token);
-});
-
-app.Run();
-
-// ================= Helpers =================
-static X509Certificate2 LoadFromStoreBySubjectName(IConfiguration cfg)
-{
-    var subjectName = cfg["AuthCert:SubjectName"];
-    if (string.IsNullOrWhiteSpace(subjectName))
-        throw new InvalidOperationException("AuthCert:SubjectName no configurado en appsettings.json.");
-
-    var storeLoc = string.Equals(cfg["AuthCert:StoreLocation"], "CurrentUser", StringComparison.OrdinalIgnoreCase)
-        ? StoreLocation.CurrentUser : StoreLocation.LocalMachine;
-
-    var storeName = Enum.TryParse<StoreName>(cfg["AuthCert:StoreName"], true, out var sn) ? sn : StoreName.My;
-
-    using var store = new X509Store(storeName, storeLoc);
-    store.Open(OpenFlags.ReadOnly);
-
-    // Busca por CN/IssuedTo que contenga el texto (no es exact match estricto)
-    var found = store.Certificates.Find(X509FindType.FindBySubjectName, subjectName, validOnly: false);
-
-    if (found.Count == 0)
-        throw new InvalidOperationException($"No se encontró certificado por nombre '{subjectName}' en {storeLoc}\\{storeName}.");
-
-    // Si hay varios con el mismo nombre, elige el más reciente con clave privada
-    var cert = found
-        .Cast<X509Certificate2>()
-        .Where(c => c.HasPrivateKey)
-        .OrderByDescending(c => c.NotBefore)
-        .FirstOrDefault();
-
-    if (cert == null)
-        throw new InvalidOperationException($"Se encontró(n) certificado(s) '{subjectName}' pero ninguno con clave privada.");
-
-    return cert;
-}
