@@ -1,0 +1,13 @@
+builder.Services.AddHttpClient("mtls")
+    .ConfigurePrimaryHttpMessageHandler(sp =>
+    {
+        var cfg = sp.GetRequiredService<IConfiguration>();
+        var handler = new HttpClientHandler
+        {
+            ClientCertificateOptions = ClientCertificateOptions.Manual,
+            SslProtocols = SslProtocols.Tls12
+        };
+        // Si usas SubjectName:
+        handler.ClientCertificates.Add(LoadFromStoreBySubjectName(cfg));
+        return handler;
+    });
