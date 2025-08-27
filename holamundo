@@ -1,58 +1,61 @@
-List<string> sqlInsertRows = new List<string>();
+using System.Net.Http.Json;
+using System.Text.Json;
 
-string fechaActual = DateTime.Now.ToString("yyyy-MM-dd-HH.mm.ss.ffffff");
-string processingTime = $"{_appTimer.Elapsed.Minutes}m {_appTimer.Elapsed.Seconds}s";
-
-// Datos del encabezado del request
-string hUserId = request.Header.HUserId;
-string hProvider = request.Header.HProvider;
-string hSessionId = request.Header.HSessionId;
-string hClientIp = request.Header.HClientIp;
-string responseId = Guid.NewGuid().ToString();
-string statusCode = "200";
-string message = "Consulta Exitosa";
-string traceId = "trace-001";
-string httpCode = "200";
-string systemMsg = "OK";
-string errorMsg = "";
-
-int indexBalance = 0;
-foreach (var balance in consultarBuzonResponse.Balances.Balance)
+public interface IAuthService
 {
-    foreach (var currency in balance.Currencys)
-    {
-        foreach (var denomination in currency.Denominations.Denomination)
-        {
-            string row = $@"
-SELECT '{hUserId}', '{hProvider}', '{hSessionId}', '{hClientIp}', '{fechaActual}',
-       '{responseId}', '{fechaActual}', '{processingTime}', '{statusCode}', '{message}',
-       '{traceId}', '{httpCode}', '{systemMsg}', '{errorMsg}',
-       '{currency.Code}', '{consultarBuzonResponse.CountryId}', {indexBalance}, '{balance.BalanceType}',
-       '{balance.DeviceCode}', '{balance.DateBalance}', '{balance.DeviceCode}', 0, '{currency.Code}',
-       {denomination.Value}, {denomination.Quantity}, {denomination.Amount}, '{denomination.Type}',
-       '', '', '', '', '', '', ''";
-            sqlInsertRows.Add(row.Trim());
-        }
-    }
-    indexBalance++;
+    Task<TokenResponse> ObtenerTokenAsync();
 }
 
-foreach (var trx in consultarBuzonResponse.Transaccion.Transaction)
+public sealed class AuthService : IAuthService
 {
-    foreach (var currency in trx.currency)
+    private readonly IHttpClientFactory _factory;
+    private readonly IConfiguration _cfg;
+
+    public AuthService(IHttpClientFactory factory, IConfiguration cfg)
     {
-        foreach (var denomination in currency.Denominations.Denomination)
-        {
-            string row = $@"
-SELECT '{hUserId}', '{hProvider}', '{hSessionId}', '{hClientIp}', '{fechaActual}',
-       '{responseId}', '{fechaActual}', '{processingTime}', '{statusCode}', '{message}',
-       '{traceId}', '{httpCode}', '{systemMsg}', '{errorMsg}',
-       '{currency.Code}', '{consultarBuzonResponse.CountryId}', 0, '',
-       '{trx.DeviceCode}', '{trx.DateBalance}', '', 0, '{currency.Code}',
-       {denomination.Value}, {denomination.Quantity}, {denomination.Amount}, '{denomination.Type}',
-       '{trx.ActualId}', '{trx.TransactonDate}', '{trx.ServicePoint}', '{trx.ReceiptNumber}',
-       '{currency.CashierId}', '{currency.CashierName}', '{trx.TipoTrans}'";
-            sqlInsertRows.Add(row.Trim());
-        }
+        _factory = factory;
+        _cfg = cfg;
     }
+
+    public async Task<TokenResponse> ObtenerTokenAsync()
+    {
+        var client = _factory.CreateClient("mtls");
+        var url = _cfg["TokenEndpoint"]!;
+
+        // Ajusta el payload al que exige tu endpoint
+        var payload = new
+        {
+            client_id = "TU_CLIENT_ID",
+            client_secret = "TU_CLIENT_SECRET",
+            grant_type = "client_credentials",
+            scope = "api.read"
+        };
+
+        // A) JSON (si lo acepta)
+        var resp = await client.PostAsJsonAsync(url, payload);
+
+        // B) Si el servidor exige x-www-form-urlencoded, usa:
+        // var form = new FormUrlEncodedContent(new[]
+        // {
+        //     new KeyValuePair<string,string>("client_id","TU_CLIENT_ID"),
+        //     new KeyValuePair<string,string>("client_secret","TU_CLIENT_SECRET"),
+        //     new KeyValuePair<string,string>("grant_type","client_credentials"),
+        //     new KeyValuePair<string,string>("scope","api.read")
+        // });
+        // var resp = await client.PostAsync(url, form);
+
+        resp.EnsureSuccessStatusCode();
+
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<TokenResponse>(
+            json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+    }
+}
+
+public sealed class TokenResponse
+{
+    public string? Access_Token { get; set; }
+    public string? Token_Type { get; set; }
+    public int Expires_In { get; set; }
+    // agrega otros campos si el proveedor los devuelve
 }
