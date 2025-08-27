@@ -9,22 +9,11 @@ builder.Services.AddHttpClient("mtls")
             SslProtocols = System.Security.Authentication.SslProtocols.Tls12
         };
 
-        // Certificado de CLIENTE (mTLS) - ya lo estás cargando por SubjectName/Thumbprint
-        handler.ClientCertificates.Add(LoadFromStoreBySubjectName(cfg)); // tu helper
+        handler.ClientCertificates.Add(LoadFromStoreBySubjectName(cfg));
 
-        // --- Pinning del SERVIDOR (solo temporal) ---
-        var expectedThumbprint = (cfg["ServerCert:Thumbprint"] ?? "").Replace(" ", "").ToUpperInvariant();
-
-        handler.ServerCertificateCustomValidationCallback = (req, cert, chain, errors) =>
-        {
-            // Si todo es válido, perfecto
-            if (errors == System.Net.Security.SslPolicyErrors.None)
-                return true;
-
-            // Si hay NameMismatch/ChainErrors, aceptamos solo si coincide la huella esperada
-            var serverTp = cert?.GetCertHashString()?.Replace(" ", "")?.ToUpperInvariant();
-            return !string.IsNullOrEmpty(expectedThumbprint) && serverTp == expectedThumbprint;
-        };
+        // ⚠️ Solo para pruebas: aceptar cualquier cert de servidor
+        handler.ServerCertificateCustomValidationCallback = 
+            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
 
         return handler;
     });
