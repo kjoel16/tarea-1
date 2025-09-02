@@ -1,27 +1,53 @@
+using System.Net.Http.Headers;
+using System.Text.Json;
+
 public async Task<TokenResponse> ObtenerTokenAsync()
 {
     try
     {
-        var client  = _factory.CreateClient("mtls"); // o el que uses
-        var config  = ConnectionConfig.GetJwtConsumir();
+        var client = _factory.CreateClient("mtls");
+        var config = ConnectionConfig.GetJwtConsumir();
 
-        var fields = new Dictionary<string, string>
+        // Valida que haya valores
+        if (string.IsNullOrWhiteSpace(config.client_Id))
+            throw new InvalidOperationException("client_Id vacío.");
+        if (string.IsNullOrWhiteSpace(config.client_secret))
+            throw new InvalidOperationException("client_secret vacío.");
+
+        // Usa EXACTAMENTE las llaves que usaste en Postman
+        var pairs = new List<KeyValuePair<string, string>>
         {
-            ["Client_id"]     = config.client_Id,
-            ["Client_secret"] = config.client_secret,
-            // Solo si tu API los exige, descomenta:
-            // ["Grant_type"]    = config.grant_type,
-            // ["Scope"]         = config.scope
+            new("Client_id",     config.client_Id),
+            new("Client_secret", config.client_secret),
+
+            // Descomenta solo si el API los requiere
+            // new("Grant_type",    config.grant_type),
+            // new("Scope",         config.scope)
         };
 
-        using var content = new FormUrlEncodedContent(fields); // Content-Type: application/x-www-form-urlencoded
+        using var content = new FormUrlEncodedContent(pairs);
+
+        // (opcional) explícitalo, aunque FormUrlEncodedContent ya lo pone
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+
+        // DEBUG: ver exactamente qué se enviará
+        var payloadPreview = await content.ReadAsStringAsync(); // ej: Client_id=DVHN.CID2025&Client_secret=DVHN.CSRT2025
+        System.Diagnostics.Debug.WriteLine($"FORM BODY => {payloadPreview}");
+
+        // Si quieres, asegúrate de pedir JSON
+        client.DefaultRequestHeaders.Accept.Clear();
+        client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+
         var response = await client.PostAsync(config.hostTkn, content);
+
+        // Si es 400, lee el detalle para entender qué campo falta o está mal
+        var raw = await response.Content.ReadAsStringAsync();
+        System.Diagnostics.Debug.WriteLine($"STATUS: {(int)response.StatusCode} BODY: {raw}");
 
         response.EnsureSuccessStatusCode();
 
-        var json = await response.Content.ReadAsStringAsync();
-        var token = JsonSerializer.Deserialize<TokenResponse>(json,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var token = JsonSerializer.Deserialize<TokenResponse>(
+            raw, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         return token!;
     }
@@ -29,4 +55,11 @@ public async Task<TokenResponse> ObtenerTokenAsync()
     {
         throw new Exception("La configuración del endpoint de token falló.", ex);
     }
+}
+
+public sealed class TokenResponse
+{
+    public string access_token { get; set; } = "";
+    public string token_type { get; set; } = "";
+    public int expires_in { get; set; }
 }
