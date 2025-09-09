@@ -1,0 +1,5 @@
+string cedulaValue = additionalDataField.Field == "CEDULA"
+                        ? additionalDataField.Value
+                        : string.Empty;
+
+                    // Llamada al lote con la cédula op
