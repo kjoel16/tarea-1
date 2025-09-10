@@ -1,8 +1,8 @@
-     A          DSPSIZ(27 132 *DS4)
-     A          CF03
-     A          CF12
+     A                                      DSPSIZ(27 132 *DS4)     /* Pantalla lógica ampliada */
+     A                                      CF03                     /* F3=Salir */
+     A                                      CF12                     /* F12=Cancelar */
 
-     A          R SFL01                     SFL
+     A          R SFL01                     SFL                      /* Formato del subfile */
      A            CAMPO01      10A  B  6  2
      A            CAMPO02      10A  B  6 14
      A            CAMPO03      10A  B  6 26
@@ -11,18 +11,19 @@
      A            CAMPO06      10A  B  6 62
      A            CAMPO07      10A  B  6 74
      A            CAMPO08      10A  B  6 86
+
+     A          R SFCTL                     SFLCTL(SFL01)            /* Control del subfile */
+     A                                      SFLSIZ(9999)             /* Tamaño máximo */
+     A                                      SFLPAG(10)               /* Paginación */
+     A                                      SFLDSP                   /* Muestra el subfile */
+     A                                      OVERLAY                  /* Superposición */
+     A                                      ROLLLEFT(19) ROLLRIGHT(20) /* Scroll horizontal */
      A                                      CF19(19 'Izquierda')
      A                                      CF20(20 'Derecha')
+     A                                      OVRDTA                   /* Permite sobrescribir datos */
+     A            MORELEFT      1Y 0O  2  2'<' DSPATR(PR)            /* Flecha izquierda */
+     A            MORERIGHT     1Y 0O  2 75'>' DSPATR(PR)            /* Flecha derecha */
+     A                                  24  2'F19=Izq  F20=Der'      /* Leyenda de ayuda */
 
-     A          R SFCTL                     SFLCTL(SFL01)
-     A                                      SFLSIZ(9999)
-     A                                      SFLPAG(10)
-     A                                      SFLDSP
-     A                                      OVERLAY
-     A                                      ROLLLEFT(19) ROLLRIGHT(20)
-     A            MORELEFT      1Y 0O  2  2'<' DSPATR(PR)
-     A            MORERIGHT     1Y 0O  2 75'>' DSPATR(PR)
-     A                                  24  2'F19=Izq  F20=Der'
-
-     A          R FOOTER
+     A          R FOOTER                                               
      A                                  23  2'Fin del listado'
