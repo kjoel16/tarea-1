@@ -1,29 +1,61 @@
-     A                                      DSPSIZ(27 132 *DS4)     /* Pantalla lógica ampliada */
-     A                                      CF03                     /* F3=Salir */
-     A                                      CF12                     /* F12=Cancelar */
+**FREE
+ctl-opt datfmt(*iso) timfmt(*iso) dftactgrp(*no) actgrp(*new);
 
-     A          R SFL01                     SFL                      /* Formato del subfile */
-     A            CAMPO01      10A  B  6  2
-     A            CAMPO02      10A  B  6 14
-     A            CAMPO03      10A  B  6 26
-     A            CAMPO04      10A  B  6 38
-     A            CAMPO05      10A  B  6 50
-     A            CAMPO06      10A  B  6 62
-     A            CAMPO07      10A  B  6 74
-     A            CAMPO08      10A  B  6 86
+/*-------------------------------------------------------------------
+ * Archivo de pantalla SUFILEHORI (el display file que creaste)
+ *-------------------------------------------------------------------*/
+fSUFILEHORI cf   e             workstn sfile(SFL01:rrn);
 
-     A          R SFCTL                     SFLCTL(SFL01)            /* Control del subfile */
-     A                                      SFLSIZ(9999)             /* Tamaño máximo */
-     A                                      SFLPAG(10)               /* Paginación */
-     A                                      SFLDSP                   /* Muestra el subfile */
-     A                                      OVERLAY                  /* Superposición */
-     A                                      ROLLLEFT(19) ROLLRIGHT(20) /* Scroll horizontal */
-     A                                      CF19(19 'Izquierda')
-     A                                      CF20(20 'Derecha')
-     A                                      OVRDTA                   /* Permite sobrescribir datos */
-     A            MORELEFT      1Y 0O  2  2'<' DSPATR(PR)            /* Flecha izquierda */
-     A            MORERIGHT     1Y 0O  2 75'>' DSPATR(PR)            /* Flecha derecha */
-     A                                  24  2'F19=Izq  F20=Der'      /* Leyenda de ayuda */
+/*-------------------------------------------------------------------
+ * Variables
+ *-------------------------------------------------------------------*/
+dcl-s rrn        packed(5:0) inz(0);
+dcl-s tecla      char(2) inz(*blanks);
+dcl-s i          int(10);
+dcl-s salir      ind inz(*off);
 
-     A          R FOOTER                                               
-     A                                  23  2'Fin del listado'
+/* Campos de datos del subfile */
+dcl-s CAMPO01    char(10);
+dcl-s CAMPO02    char(10);
+dcl-s CAMPO03    char(10);
+dcl-s CAMPO04    char(10);
+dcl-s CAMPO05    char(10);
+dcl-s CAMPO06    char(10);
+dcl-s CAMPO07    char(10);
+dcl-s CAMPO08    char(10);
+
+/*-------------------------------------------------------------------
+ * Programa principal
+ *-------------------------------------------------------------------*/
+dow not salir;
+
+   // Limpia y carga el subfile
+   rrn = 0;
+   clear SFL01;
+
+   for i = 1 to 50; // Carga 50 registros ficticios
+      rrn += 1;
+      CAMPO01 = 'C1_' + %char(i);
+      CAMPO02 = 'C2_' + %char(i);
+      CAMPO03 = 'C3_' + %char(i);
+      CAMPO04 = 'C4_' + %char(i);
+      CAMPO05 = 'C5_' + %char(i);
+      CAMPO06 = 'C6_' + %char(i);
+      CAMPO07 = 'C7_' + %char(i);
+      CAMPO08 = 'C8_' + %char(i);
+      write SFL01;
+   endfor;
+
+   // Muestra el control del subfile
+   exfmt SFCTL;
+
+   // Captura teclas de función
+   if *in03 = *on; // F3=Salir
+      salir = *on;
+   endif;
+
+   // F19/F20 (ROLLLEFT/ROLLRIGHT) son manejados automáticamente por el DSPF.
+enddo;
+
+*inlr = *on;
+return;
