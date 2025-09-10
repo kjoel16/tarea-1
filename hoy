@@ -1,23 +1,28 @@
-A          R SFL01                     SFL
-A            CAMPO01      10A  B  6  2
-A            CAMPO02      10A  B  6 14
-A            CAMPO03      10A  B  6 26
-A            CAMPO04      10A  B  6 38
-A            CAMPO05      10A  B  6 50
-A            CAMPO06      10A  B  6 62
-A            CAMPO07      10A  B  6 74
-A            CAMPO08      10A  B  6 86
-A                                      CF19(19 'Izquierda')
-A                                      CF20(20 'Derecha')
+     A          DSPSIZ(27 132 *DS4)
+     A          CF03
+     A          CF12
 
-A          R SFCTL                     SFLCTL(SFL01)
-A                                      OVERLAY
-A                                      SFLSIZ(9999)
-A                                      SFLPAG(10)
-A                                      ROLLLEFT(19) ROLLRIGHT(20)
-A            MORELEFT      1Y 0O  2  2'<'    DSPATR(PR)
-A            MORERIGHT     1Y 0O  2 75'>'    DSPATR(PR)
-A                                  24  2'F19=Izq  F20=Der'
+     A          R SFL01                     SFL
+     A            CAMPO01      10A  B  6  2
+     A            CAMPO02      10A  B  6 14
+     A            CAMPO03      10A  B  6 26
+     A            CAMPO04      10A  B  6 38
+     A            CAMPO05      10A  B  6 50
+     A            CAMPO06      10A  B  6 62
+     A            CAMPO07      10A  B  6 74
+     A            CAMPO08      10A  B  6 86
+     A                                      CF19(19 'Izquierda')
+     A                                      CF20(20 'Derecha')
 
-A          R FOOTER
-A                                  23  2'Fin del listado'
+     A          R SFCTL                     SFLCTL(SFL01)
+     A                                      SFLSIZ(9999)
+     A                                      SFLPAG(10)
+     A                                      SFLDSP
+     A                                      OVERLAY
+     A                                      ROLLLEFT(19) ROLLRIGHT(20)
+     A            MORELEFT      1Y 0O  2  2'<' DSPATR(PR)
+     A            MORERIGHT     1Y 0O  2 75'>' DSPATR(PR)
+     A                                  24  2'F19=Izq  F20=Der'
+
+     A          R FOOTER
+     A                                  23  2'Fin del listado'
