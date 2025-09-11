@@ -1,47 +1,29 @@
-dcl-proc main;
-  dcl-pi *n end-pi;
+PGM
 
-  dow not gameOver;
-    tick = tick + 1;
-    spawnTick = spawnTick + 1;
+/* 
+   DINORUN - CL para ejecutar el minijuego Dino sin WAITRCD en el DSPF.
+   Muestra un “frame” del juego, espera un segundo y vuelve a llamarlo.
+   Ajusta MYLIB y DINO al nombre real de tu biblioteca y programa.
+*/
 
-    Physics();
-    MoveObstacles();
+DCL VAR(&EXIT) TYPE(*LGL) VALUE('0')
 
-    if spawnTick >= spawnEvery;
-      SpawnObstacle();
-      spawnTick = 0;
-    endif;
+/* Bucle principal */
+:LOOP
+    /* Llama al programa RPG que muestra un frame y procesa tecla */
+    CALL PGM(MYLIB/DINO)
 
-    ClearWorld();
-    DrawGround();
-    DrawObstacles();
-    DrawDino();
-    DrawUI();
+    /* Aquí podrías implementar una señal de salida:
+       Si tu programa RPG setea algún indicador o variable externa 
+       (por ejemplo, pone &EXIT = '1'), revisa esa condición. */
 
-    if gameOver;
-      MSG = '¡Colisión! F3 para salir.';
-    else;
-      MSG = 'F1 salta, F3 sale.';
-    endif;
+    IF (&EXIT *EQ '1') DO
+       RETURN
+    ENDDO
 
-    exfmt SCR;
+    /* Pausa 1 segundo entre iteraciones para simular animación */
+    DLYJOB DLY(1)
 
-    if *in03 = *on;
-      leave;
-    endif;
+GOTO LOOP
 
-    if *in01 = *on and not gameOver;
-      if dinoRow = GROUNDROW;
-        jumping = *on;
-        velY = jumpPower;
-      endif;
-    endif;
-
-    if not gameOver;
-      CheckCollision();
-    endif;
-  enddo;
-
-  *inlr = *on;
-end-proc;
+ENDPGM
