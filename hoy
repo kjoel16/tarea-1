@@ -1,154 +1,188 @@
+
 **free
 ctl-opt dftactgrp(*no) actgrp(*new) option(*srcstmt:*nodebugio);
 
+// Archivo de pantalla
 dcl-f DINO workstn usropn;
 
-// Variables de pantalla
-dcl-s TITULO   char(40);
-dcl-s MSG      char(60);
-dcl-s L1-L10   char(60) dim(10) inz(*all' ');
-dcl-s PUNTAJE  char(20);
-dcl-s AYUDA    char(40);
-
 // Constantes
-dcl-c WIDTH     60;
-dcl-c GROUNDROW 10;
-dcl-c DINO_COL   3;
+dcl-c WIDTH       60;
+dcl-c GROUNDROW   10;
+dcl-c DINO_COL    3;
+dcl-c MAXOBS      5;
+
+// Variables de pantalla
+dcl-s TITULO    char(40);
+dcl-s MSG       char(60);
+dcl-s L         char(60) dim(10) inz(*all' ');
+dcl-s PUNTAJE   char(20);
+dcl-s AYUDA     char(40);
 
 // Estado del juego
-dcl-s dinoRow   int(10) inz(GROUNDROW);
-dcl-s velY      int(10) inz(0);
-dcl-s jumping   ind     inz(*off);
-dcl-s jumpPower int(10) inz(3);
-dcl-s gravity   int(10) inz(-1);
-
-dcl-s maxObs    int(10) inz(5);
-dcl-ds Obs dim(5) qualified;
-   x      int(10);
-   alive  ind;
-end-ds;
-
+dcl-s dinoRow    int(10) inz(GROUNDROW);
+dcl-s velY       int(10) inz(0);
+dcl-s jumping    ind     inz(*off);
+dcl-s jumpPower  int(10) inz(3);
+dcl-s gravity    int(10) inz(-1);
+dcl-s score      int(10) inz(0);
 dcl-s tick       int(10) inz(0);
 dcl-s spawnTick  int(10) inz(0);
 dcl-s spawnEvery int(10) inz(3);
-dcl-s score      int(10) inz(0);
 dcl-s gameOver   ind     inz(*off);
 
-// === Helpers ===
+// Obstáculos
+dcl-ds Obs dim(MAXOBS) qualified;
+  x     int(10);
+  alive ind;
+end-ds;
+
+// --- Limpia el área de juego ---
 dcl-proc ClearWorld;
-   for i int(10)=1 to 10;
-      L1(i)=*all' ';
-   endfor;
+  dcl-pi *n end-pi;
+  for i from 1 to 10;
+    L(i) = *all' ';
+  endfor;
 end-proc;
 
+// --- Coloca un carácter en la matriz ---
 dcl-proc PutChar;
-   dcl-pi *n row int(10) col int(10) ch char(1); end-pi;
-   if row between 1 and 10 and col between 1 and WIDTH;
-      %subst(L1(row):col:1)=ch;
-   endif;
+  dcl-pi *n row int(10) col int(10) ch char(1); end-pi;
+  if row >= 1 and row <= 10 and col >= 1 and col <= WIDTH;
+    %subst(L(row):col:1) = ch;
+  endif;
 end-proc;
 
+// --- Dibuja el suelo ---
 dcl-proc DrawGround;
-   for c int(10)=1 to WIDTH;
-      PutChar(GROUNDROW:c:'_');
-   endfor;
+  dcl-pi *n end-pi;
+  for c from 1 to WIDTH;
+    PutChar(GROUNDROW:c:'_');
+  endfor;
 end-proc;
 
+// --- Dibuja el dino ---
 dcl-proc DrawDino;
-   PutChar(dinoRow:DINO_COL:'D');
+  dcl-pi *n end-pi;
+  PutChar(dinoRow:DINO_COL:'D');
 end-proc;
 
+// --- Dibuja obstáculos ---
 dcl-proc DrawObstacles;
-   for i int(10)=1 to maxObs;
-      if Obs(i).alive and Obs(i).x>=1 and Obs(i).x<=WIDTH;
-         PutChar(GROUNDROW:Obs(i).x:'|');
-      endif;
-   endfor;
+  dcl-pi *n end-pi;
+  for i from 1 to MAXOBS;
+    if Obs(i).alive and Obs(i).x >= 1 and Obs(i).x <= WIDTH;
+      PutChar(GROUNDROW:Obs(i).x:'|');
+    endif;
+  endfor;
 end-proc;
 
+// --- Mueve obstáculos ---
 dcl-proc MoveObstacles;
-   for i int(10)=1 to maxObs;
-      if Obs(i).alive;
-         Obs(i).x-=1;
-         if Obs(i).x<1;
-            Obs(i).alive=*off;
-            score+=1;
-         endif;
+  dcl-pi *n end-pi;
+  for i from 1 to MAXOBS;
+    if Obs(i).alive;
+      Obs(i).x -= 1;
+      if Obs(i).x < 1;
+        Obs(i).alive = *off;
+        score += 1;
       endif;
-   endfor;
+    endif;
+  endfor;
 end-proc;
 
+// --- Crea un obstáculo ---
 dcl-proc SpawnObstacle;
-   for i int(10)=1 to maxObs;
-      if not Obs(i).alive;
-         Obs(i).alive=*on;
-         Obs(i).x=WIDTH;
-         leave;
-      endif;
-   endfor;
+  dcl-pi *n end-pi;
+  for i from 1 to MAXOBS;
+    if not Obs(i).alive;
+      Obs(i).alive = *on;
+      Obs(i).x = WIDTH;
+      leave;
+    endif;
+  endfor;
 end-proc;
 
+// --- Detecta colisión ---
 dcl-proc CheckCollision;
-   for i int(10)=1 to maxObs;
-      if Obs(i).alive and Obs(i).x=DINO_COL and dinoRow=GROUNDROW;
-         gameOver=*on;
-      endif;
-   endfor;
+  dcl-pi *n end-pi;
+  for i from 1 to MAXOBS;
+    if Obs(i).alive and Obs(i).x = DINO_COL and dinoRow = GROUNDROW;
+      gameOver = *on;
+    endif;
+  endfor;
 end-proc;
 
+// --- Física del salto ---
 dcl-proc Physics;
-   if jumping;
-      dinoRow-=1;
-      velY-=1;
-      if velY<=0; jumping=*off; endif;
-   else;
-      if dinoRow<GROUNDROW;
-         dinoRow -= gravity;
-         if dinoRow>GROUNDROW; dinoRow=GROUNDROW; endif;
+  dcl-pi *n end-pi;
+  if jumping;
+    dinoRow -= 1;
+    velY -= 1;
+    if velY <= 0;
+      jumping = *off;
+    endif;
+  else;
+    if dinoRow < GROUNDROW;
+      dinoRow -= gravity; // gravity=-1 => baja
+      if dinoRow > GROUNDROW;
+        dinoRow = GROUNDROW;
       endif;
-   endif;
+    endif;
+  endif;
 end-proc;
 
+// --- UI ---
 dcl-proc DrawUI;
-   TITULO='RPG DINO  F1=Salto  F3=Salir';
-   PUNTAJE='Puntos: '+%char(score);
-   AYUDA='Usa CL con OVRDSPF WAITRCD(1).';
+  dcl-pi *n end-pi;
+  TITULO  = 'RPG DINO  F1=Salto  F3=Salir';
+  PUNTAJE = 'Puntos: ' + %char(score);
+  AYUDA   = 'Ejecutar via CL con OVRDSPF WAITRCD(1)';
 end-proc;
 
 // === Programa principal ===
 open DINO;
 
 dow not gameOver;
-   tick+=1; spawnTick+=1;
+  tick += 1;
+  spawnTick += 1;
 
-   Physics();
-   MoveObstacles();
-   if spawnTick>=spawnEvery;
-      SpawnObstacle(); spawnTick=0;
-   endif;
+  Physics();
+  MoveObstacles();
 
-   ClearWorld();
-   DrawGround(); DrawObstacles(); DrawDino(); DrawUI();
+  if spawnTick >= spawnEvery;
+    SpawnObstacle();
+    spawnTick = 0;
+  endif;
 
-   if gameOver;
-      MSG='¡Colisión! F3 para salir.';
-   else;
-      MSG='F1 salta, F3 sale.';
-   endif;
+  ClearWorld();
+  DrawGround();
+  DrawObstacles();
+  DrawDino();
+  DrawUI();
 
-   exfmt SCR;
+  if gameOver;
+    MSG = '¡Colisión! F3 para salir.';
+  else;
+    MSG = 'F1 salta, F3 sale.';
+  endif;
 
-   if *in03=*on; leave; endif;
-   if *in01=*on and not gameOver;
-      if dinoRow=GROUNDROW;
-         jumping=*on; velY=jumpPower;
-      endif;
-   endif;
+  exfmt SCR;
 
-   if not gameOver;
-      CheckCollision();
-   endif;
+  if *in03 = *on;
+    leave;
+  endif;
+
+  if *in01 = *on and not gameOver;
+    if dinoRow = GROUNDROW;
+      jumping = *on;
+      velY = jumpPower;
+    endif;
+  endif;
+
+  if not gameOver;
+    CheckCollision();
+  endif;
 enddo;
 
-*inlr=*on;
+*inlr = *on;
 return;
