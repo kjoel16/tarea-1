@@ -1,9 +1,8 @@
-
 **free
 ctl-opt dftactgrp(*no) actgrp(*new) option(*srcstmt:*nodebugio);
 
 // Archivo de pantalla
-dcl-f DINO workstn usropn;
+dcl-f DINO workstn;
 
 // Constantes
 dcl-c WIDTH       60;
@@ -36,94 +35,116 @@ dcl-ds Obs dim(MAXOBS) qualified;
   alive ind;
 end-ds;
 
+// Índices
+dcl-s i int(10);
+dcl-s c int(10);
+
 // --- Limpia el área de juego ---
 dcl-proc ClearWorld;
   dcl-pi *n end-pi;
-  for i from 1 to 10;
-    L(i) = *all' ';
-  endfor;
+  dcl-s j int(10);
+  j = 1;
+  dow j <= 10;
+    L(j) = *all' ';
+    j = j + 1;
+  enddo;
 end-proc;
 
 // --- Coloca un carácter en la matriz ---
 dcl-proc PutChar;
-  dcl-pi *n row int(10) col int(10) ch char(1); end-pi;
+  dcl-pi *n;
+    row int(10);
+    col int(10);
+    ch  char(1);
+  end-pi;
+
   if row >= 1 and row <= 10 and col >= 1 and col <= WIDTH;
-    %subst(L(row):col:1) = ch;
+    %subst(L(row) : col : 1) = ch;
   endif;
 end-proc;
 
 // --- Dibuja el suelo ---
 dcl-proc DrawGround;
   dcl-pi *n end-pi;
-  for c from 1 to WIDTH;
-    PutChar(GROUNDROW:c:'_');
-  endfor;
+  c = 1;
+  dow c <= WIDTH;
+    PutChar(GROUNDROW : c : '_');
+    c = c + 1;
+  enddo;
 end-proc;
 
 // --- Dibuja el dino ---
 dcl-proc DrawDino;
   dcl-pi *n end-pi;
-  PutChar(dinoRow:DINO_COL:'D');
+  PutChar(dinoRow : DINO_COL : 'D');
 end-proc;
 
 // --- Dibuja obstáculos ---
 dcl-proc DrawObstacles;
   dcl-pi *n end-pi;
-  for i from 1 to MAXOBS;
+  i = 1;
+  dow i <= MAXOBS;
     if Obs(i).alive and Obs(i).x >= 1 and Obs(i).x <= WIDTH;
-      PutChar(GROUNDROW:Obs(i).x:'|');
+      PutChar(GROUNDROW : Obs(i).x : '|');
     endif;
-  endfor;
+    i = i + 1;
+  enddo;
 end-proc;
 
 // --- Mueve obstáculos ---
 dcl-proc MoveObstacles;
   dcl-pi *n end-pi;
-  for i from 1 to MAXOBS;
+  i = 1;
+  dow i <= MAXOBS;
     if Obs(i).alive;
-      Obs(i).x -= 1;
+      Obs(i).x = Obs(i).x - 1;
       if Obs(i).x < 1;
         Obs(i).alive = *off;
-        score += 1;
+        score = score + 1;
       endif;
     endif;
-  endfor;
+    i = i + 1;
+  enddo;
 end-proc;
 
-// --- Crea un obstáculo ---
+// --- Crea obstáculo ---
 dcl-proc SpawnObstacle;
   dcl-pi *n end-pi;
-  for i from 1 to MAXOBS;
+  i = 1;
+  dow i <= MAXOBS;
     if not Obs(i).alive;
       Obs(i).alive = *on;
       Obs(i).x = WIDTH;
       leave;
     endif;
-  endfor;
+    i = i + 1;
+  enddo;
 end-proc;
 
 // --- Detecta colisión ---
 dcl-proc CheckCollision;
   dcl-pi *n end-pi;
-  for i from 1 to MAXOBS;
+  i = 1;
+  dow i <= MAXOBS;
     if Obs(i).alive and Obs(i).x = DINO_COL and dinoRow = GROUNDROW;
       gameOver = *on;
     endif;
-  endfor;
+    i = i + 1;
+  enddo;
 end-proc;
 
 // --- Física del salto ---
 dcl-proc Physics;
   dcl-pi *n end-pi;
   if jumping;
-    dinoRow -= 1;
-    velY -= 1;
+    dinoRow = dinoRow - 1;
+    velY = velY - 1;
     if velY <= 0;
       jumping = *off;
     endif;
   else;
     if dinoRow < GROUNDROW;
-      dinoRow -= gravity; // gravity=-1 => baja
+      dinoRow = dinoRow + 1;
       if dinoRow > GROUNDROW;
         dinoRow = GROUNDROW;
       endif;
@@ -140,11 +161,9 @@ dcl-proc DrawUI;
 end-proc;
 
 // === Programa principal ===
-open DINO;
-
 dow not gameOver;
-  tick += 1;
-  spawnTick += 1;
+  tick = tick + 1;
+  spawnTick = spawnTick + 1;
 
   Physics();
   MoveObstacles();
