@@ -1,61 +1,23 @@
-**FREE
-ctl-opt datfmt(*iso) timfmt(*iso) dftactgrp(*no) actgrp(*new);
-
-/*-------------------------------------------------------------------
- * Archivo de pantalla SUFILEHORI (el display file que creaste)
- *-------------------------------------------------------------------*/
-fSUFILEHORI cf   e             workstn sfile(SFL01:rrn);
-
-/*-------------------------------------------------------------------
- * Variables
- *-------------------------------------------------------------------*/
-dcl-s rrn        packed(5:0) inz(0);
-dcl-s tecla      char(2) inz(*blanks);
-dcl-s i          int(10);
-dcl-s salir      ind inz(*off);
-
-/* Campos de datos del subfile */
-dcl-s CAMPO01    char(10);
-dcl-s CAMPO02    char(10);
-dcl-s CAMPO03    char(10);
-dcl-s CAMPO04    char(10);
-dcl-s CAMPO05    char(10);
-dcl-s CAMPO06    char(10);
-dcl-s CAMPO07    char(10);
-dcl-s CAMPO08    char(10);
-
-/*-------------------------------------------------------------------
- * Programa principal
- *-------------------------------------------------------------------*/
-dow not salir;
-
-   // Limpia y carga el subfile
-   rrn = 0;
-   clear SFL01;
-
-   for i = 1 to 50; // Carga 50 registros ficticios
-      rrn += 1;
-      CAMPO01 = 'C1_' + %char(i);
-      CAMPO02 = 'C2_' + %char(i);
-      CAMPO03 = 'C3_' + %char(i);
-      CAMPO04 = 'C4_' + %char(i);
-      CAMPO05 = 'C5_' + %char(i);
-      CAMPO06 = 'C6_' + %char(i);
-      CAMPO07 = 'C7_' + %char(i);
-      CAMPO08 = 'C8_' + %char(i);
-      write SFL01;
-   endfor;
-
-   // Muestra el control del subfile
-   exfmt SFCTL;
-
-   // Captura teclas de función
-   if *in03 = *on; // F3=Salir
-      salir = *on;
-   endif;
-
-   // F19/F20 (ROLLLEFT/ROLLRIGHT) son manejados automáticamente por el DSPF.
-enddo;
-
-*inlr = *on;
-return;
+A                                      DSPSIZ(24 80 *DS3)
+A                                      INDARA
+A                                      WAITRCD(1)
+A                                      PRINT(*NO)
+A          R SCR                       CF01(01) CF03(03)
+A                                      ASSUME
+A            Titulo       40A  O  3 10
+A                                      DSPATR(HI)
+A                                      COLOR(WHT)
+A            Msg          60A  O  5 10
+A            L1           60A  O  7 10
+A            L2           60A  O  8 10
+A            L3           60A  O  9 10
+A            L4           60A  O 10 10
+A            L5           60A  O 11 10
+A            L6           60A  O 12 10
+A            L7           60A  O 13 10
+A            L8           60A  O 14 10
+A            L9           60A  O 15 10
+A            L10          60A  O 16 10
+A            Puntaje      20A  O 18 10
+A            Ayuda        40A  O 20 10
+A                                      COLOR(BLU)
