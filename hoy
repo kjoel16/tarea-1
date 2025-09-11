@@ -1,18 +1,21 @@
-PGM
-
-DCL VAR(&EXIT) TYPE(*LGL) VALUE('0')
-
-LOOP:      /* etiqueta correcta: sin dos puntos al inicio */
-
-CALL PGM(MYLIB/DINO)
-
-/* Aquí podrías verificar una condición de salida si tu RPG devuelve algo */
-IF (&EXIT *EQ '1') DO
-   RETURN
-ENDDO
-
-DLYJOB DLY(1)
-
-GOTO LOOP
-
-ENDPGM
+{
+  "header": {
+    "h-request-id": "46682f80-f518-447e-9780-59fb45521d50",
+    "h-chan": "BANCA",
+    "h-terminal": "EGALINEA",
+    "h-organization": "DAVIVIENDA",
+    "h-user-id": "0808",
+    "h-provider": "CONSULTA",
+    "h-session-id": "",
+    "h-client-ip": "166.178.81.19",
+    "h-timestamp": "2025-09-11-14.08.38.256161"
+  },
+  "body": {
+    "numeroTarjeta": "4568240003490016",
+    "localidadTramite": "4568240003490016",
+    "localidadRetiro": "01",
+    "monto": 2000000,
+    "usuarioSiscard": "TES03260",
+    "version": "1.0"
+  }
+}
