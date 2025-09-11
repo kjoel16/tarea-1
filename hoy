@@ -1,6 +1,5 @@
 A                                      DSPSIZ(24 80 *DS3)
 A                                      INDARA
-A                                      WAITRCD(1)
 A                                      PRINT(*NO)
 A          R SCR                       CF01(01) CF03(03)
 A                                      ASSUME
