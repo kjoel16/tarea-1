@@ -1,28 +1,17 @@
 PGM
 
-/* 
-   DINORUN - CL para ejecutar el minijuego Dino sin WAITRCD en el DSPF.
-   Muestra un “frame” del juego, espera un segundo y vuelve a llamarlo.
-   Ajusta MYLIB y DINO al nombre real de tu biblioteca y programa.
-*/
-
 DCL VAR(&EXIT) TYPE(*LGL) VALUE('0')
 
-/* Bucle principal */
-:LOOP
-    /* Llama al programa RPG que muestra un frame y procesa tecla */
-    CALL PGM(MYLIB/DINO)
+LOOP:      /* etiqueta correcta: sin dos puntos al inicio */
 
-    /* Aquí podrías implementar una señal de salida:
-       Si tu programa RPG setea algún indicador o variable externa 
-       (por ejemplo, pone &EXIT = '1'), revisa esa condición. */
+CALL PGM(MYLIB/DINO)
 
-    IF (&EXIT *EQ '1') DO
-       RETURN
-    ENDDO
+/* Aquí podrías verificar una condición de salida si tu RPG devuelve algo */
+IF (&EXIT *EQ '1') DO
+   RETURN
+ENDDO
 
-    /* Pausa 1 segundo entre iteraciones para simular animación */
-    DLYJOB DLY(1)
+DLYJOB DLY(1)
 
 GOTO LOOP
 
