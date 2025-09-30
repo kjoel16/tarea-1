@@ -1,0 +1,23 @@
+//===========================================================
+// Procedimiento que recorre la tabla y actualiza registros
+// de estado 'ACTIVA' a 'INACTIVA'
+//===========================================================
+dcl-proc DESACTIVARPERFILES;
+   dcl-s cuentaValida like(PERFILC);
+
+   // Posicionarse al inicio de la tabla
+   setll *start ITABLA2PRF;
+   reade *on ITABLA2PRF;
+
+   dow not %eof(ITABLA2PRF);
+
+      // Verificar si está activa
+      if MTP05STD = 'ACTIVA';
+         MTP05STD = 'INACTIVA';
+         update ITABLA2PRF;   // Actualizar registro actual
+      endif;
+
+      reade *on ITABLA2PRF;
+   enddo;
+
+end-proc;
