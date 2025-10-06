@@ -1,23 +1,33 @@
-//===========================================================
-// Procedimiento que recorre la tabla y actualiza registros
-// de estado 'ACTIVA' a 'INACTIVA'
-//===========================================================
-dcl-proc DESACTIVARPERFILES;
-   dcl-s cuentaValida like(PERFILC);
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- Configuración básica -->
+    <DeleteExistingFiles>true</DeleteExistingFiles>
+    <ExcludeApp_Data>false</ExcludeApp_Data>
+    <LaunchSiteAfterPublish>false</LaunchSiteAfterPublish>
+    <LastUsedBuildConfiguration>Release</LastUsedBuildConfiguration>
+    <LastUsedPlatform>Any CPU</LastUsedPlatform>
 
-   // Posicionarse al inicio de la tabla
-   setll *start ITABLA2PRF;
-   reade *on ITABLA2PRF;
+    <!-- Publicación -->
+    <PublishProvider>FileSystem</PublishProvider>
+    <PublishUrl>C:\Users\175841\Desktop\Publicaciones\API_64\</PublishUrl>
+    <WebPublishMethod>FileSystem</WebPublishMethod>
+    <_TargetId>Folder</_TargetId>
+    <SiteUrlToLaunchAfterPublish />
+    
+    <!-- Configuración de compilación -->
+    <Configuration>Release</Configuration>
+    <TargetFramework>net8.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    
+    <!-- Opcional: limpiar antes de publicar -->
+    <DeleteExistingFiles>true</DeleteExistingFiles>
 
-   dow not %eof(ITABLA2PRF);
-
-      // Verificar si está activa
-      if MTP05STD = 'ACTIVA';
-         MTP05STD = 'INACTIVA';
-         update ITABLA2PRF;   // Actualizar registro actual
-      endif;
-
-      reade *on ITABLA2PRF;
-   enddo;
-
-end-proc;
+    <!-- Opcional: abrir carpeta al finalizar -->
+    <OpenPublishOutputFolderOnSuccess>true</OpenPublishOutputFolderOnSuccess>
+  </PropertyGroup>
+</Project>
