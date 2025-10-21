@@ -1,0 +1,44 @@
+// Validar cuenta en Lempiras
+if CuentaLps <> '';
+   cuenta = %dec(CuentaLps:10:0);
+   SETLL cuenta TAP002CT;
+   READE cuenta TAP002CT;
+   if not %eof(TAP002CT);
+      if DMSTAT = '1';
+         EstadoCLps = 'ACTIVA';
+      else;
+         EstadoCLps = 'INACTIVO';
+         Error = 'E1101';
+         Descripcion = 'Cuenta LPS inactiva';
+      endif;
+   else;
+      Error = 'E1102';
+      Descripcion = 'Cuenta LPS no encontrada';
+   endif;
+endif;
+
+// Validar cuenta en USD
+if CuentaUSD <> '';
+   cuenta = %dec(CuentaUSD:10:0);
+   SETLL cuenta TAP002CT;
+   READE cuenta TAP002CT;
+   if not %eof(TAP002CT);
+      if DMSTAT = '1';
+         EstadoCUSD = 'ACTIVA';
+      else;
+         EstadoCUSD = 'INACTIVO';
+         Error = 'E1101';
+         Descripcion = 'Cuenta USD inactiva';
+      endif;
+   else;
+      Error = 'E1102';
+      Descripcion = 'Cuenta USD no encontrada';
+   endif;
+endif;
+
+// Validación final combinada
+if (EstadoCLps = 'INACTIVO' and EstadoCUSD = 'INACTIVO')
+   or (CuentaLps = *zeros and CuentaUSD = *zeros);
+   Error = 'E1101';
+   Descripcion = 'Ninguna cuenta activa o válida';
+endif;
