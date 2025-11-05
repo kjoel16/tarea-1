@@ -1,3 +1,47 @@
-string montoFormateado = monto % 1 == 0
-                ? monto.ToString("0.00", CultureInfo.InvariantCulture)
-                : monto.ToString(CultureInfo.InvariantCulture)
+bool dolarIdentificado = false;
+bool lempiraIdentificado = false;
+
+string identificadorDolar = "";
+string identificadorLempira = "";
+
+foreach (var transactionType in requestConsulta.Transaction)
+{
+    foreach (var totals in transactionType.Totals)
+    {
+        foreach (var transunit in transactionType.TransUnits)
+        {
+            foreach (var mix in transunit.Mix)
+            {
+                string identificador = "";
+
+                if (mix.Currency == "USD")
+                {
+                    // Si aún no se ha asignado identificador para USD
+                    if (!dolarIdentificado)
+                    {
+                        identificadorDolar = "D";
+                        dolarIdentificado = true;
+                    }
+
+                    identificador = identificadorDolar;
+                }
+                else if (mix.Currency == "HNL")
+                {
+                    // Si aún no se ha asignado identificador para HNL
+                    if (!lempiraIdentificado)
+                    {
+                        identificadorLempira = "L";
+                        lempiraIdentificado = true;
+                    }
+
+                    identificador = identificadorLempira;
+                }
+
+                string guid = Guid.NewGuid().ToString();
+
+                string row = $"{mix.Currency};{mix.Denomination};{identificador};{guid}";
+                Console.WriteLine(row);
+            }
+        }
+    }
+}
