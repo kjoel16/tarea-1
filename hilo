@@ -1,1 +1,3 @@
-jdjdndjdkxjfjd
+string montoFormateado = monto % 1 == 0
+                ? monto.ToString("0.00", CultureInfo.InvariantCulture)
+                : monto.ToString(CultureInfo.InvariantCulture)
