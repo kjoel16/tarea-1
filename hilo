@@ -1,0 +1,56 @@
+private static async Task<bool> VerificarServicioAsync()
+{
+    try
+    {
+        // 🔹 Obtener la ruta correcta del archivo sin importar dónde corra el servicio
+        var basePath = AppContext.BaseDirectory;
+        var jsonPath = Path.Combine(basePath, "appsettings.json");
+
+        string json = await File.ReadAllTextAsync(jsonPath);
+        var root = JsonSerializer.Deserialize<Dictionary<string, NotificationSettings>>(json);
+        NotificationSettings settings = root["NotificationSettings"];
+
+        string Url = settings.Url;
+
+        var content = new StringContent("{}", Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await HttpClient.PostAsync(Url, content);
+
+        return response != null && response.StatusCode != System.Net.HttpStatusCode.RequestTimeout;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error al verificar el servicio");
+        return false;
+    }
+}
+
+
+private static async Task OnServicioCaidoAsync()
+{
+    try
+    {
+        var basePath = AppContext.BaseDirectory;
+        var jsonPath = Path.Combine(basePath, "appsettings.json");
+
+        string json = await File.ReadAllTextAsync(jsonPath);
+        var root = JsonSerializer.Deserialize<Dictionary<string, NotificationSettings>>(json);
+        NotificationSettings settings = root["NotificationSettings"];
+
+        EmailSenderClient client = new();
+        CreateMailRequestBody body = new()
+        {
+            Origin = settings.Origin,
+            System = settings.System,
+            Template = settings.Template,
+            Adresses = settings.EmailList,
+            ParameterList = "",
+            HoldMailShipment = "SI"
+        };
+
+        CreateMailResponse response = await client.CreateMailAsync(body.Origin, body.System, body.Template, body.Adresses, body.ParameterList, body.HoldMailShipment);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error al ejecutar OnServicioCaidoAsync");
+    }
+}
