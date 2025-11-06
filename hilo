@@ -1,11 +1,7 @@
+public class NotificationSettings
 {
-  "NotificationSettings": {
-    "EmailList": [
-      "soporte@banco.com",
-      "infraestructura@banco.com"
-    ],
-    "Template": "AlertaServicioCaido",
-    "System": "MonitorServicios",
-    "Origin": "PinBuzonInteligente"
-  }
+    public List<string> EmailList { get; set; } = new();
+    public string Template { get; set; }
+    public string System { get; set; }
+    public string Origin { get; set; }
 }
