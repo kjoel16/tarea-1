@@ -1,1 +1,2 @@
-return response.StatusCode != System.Net.HttpStatusCode.RequestTimeout;
+return response != null && 
+       response.StatusCode != System.Net.HttpStatusCode.RequestTimeout;
