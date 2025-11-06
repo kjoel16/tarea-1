@@ -1,1 +1,1 @@
-sc create PinBuzonInteligente binPath= "C:\SupportBuzonInteligente\PinBuzonInteligente.exe" start= auto
+sc.exe create PinBuzonInteligente binPath= "C:\SupportBuzonInteligente\PinBuzonInteligente.exe" start= auto
