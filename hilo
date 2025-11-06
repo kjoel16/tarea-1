@@ -1,89 +1,11 @@
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Threading;
-
-namespace PinBuzonInteligente
 {
-    internal class Program
-    {
-        // URL a monitorear (cámbiala por la tuya)
-        private static readonly string Url = "https://tuservicio.com/api/health";
-
-        // Intervalo de verificación en milisegundos (por ejemplo, cada 10 segundos)
-        private static readonly int IntervaloPing = 10000;
-
-        // Cliente HTTP reutilizable (mejor rendimiento)
-        private static readonly HttpClient HttpClient = new HttpClient();
-
-        static async Task Main(string[] args)
-        {
-            Console.WriteLine("🟢 Iniciando monitor de servicio...");
-            Console.WriteLine($"URL objetivo: {Url}");
-            Console.WriteLine("Presiona CTRL + C para detener.\n");
-
-            while (true)
-            {
-                try
-                {
-                    bool servicioActivo = await VerificarServicioAsync();
-
-                    if (!servicioActivo)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"❌ [{DateTime.Now}] Servicio no disponible.");
-                        Console.ResetColor();
-
-                        // Llamada al método de acción cuando el servicio está caído
-                        await OnServicioCaidoAsync();
-                    }
-                    else
-                    {
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine($"✅ [{DateTime.Now}] Servicio activo.");
-                        Console.ResetColor();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"⚠️ Error durante la verificación: {ex.Message}");
-                    Console.ResetColor();
-                }
-
-                await Task.Delay(IntervaloPing);
-            }
-        }
-
-        /// <summary>
-        /// Realiza una solicitud GET para verificar si el servicio responde correctamente.
-        /// </summary>
-        private static async Task<bool> VerificarServicioAsync()
-        {
-            try
-            {
-                HttpResponseMessage response = await HttpClient.GetAsync(Url);
-                return response.IsSuccessStatusCode;
-            }
-            catch
-            {
-                // Cualquier excepción (timeout, DNS, conexión) se considera caída
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Método que se ejecuta cuando el servicio no responde.
-        /// Aquí irá tu lógica de envío, logging o notificación.
-        /// </summary>
-        private static async Task OnServicioCaidoAsync()
-        {
-            // TODO: Aquí agregas tu lógica personalizada
-            // Por ejemplo, llamada a otro servicio:
-            // await LlamarServicioEnvioAsync();
-
-            Console.WriteLine("⚙️ Ejecutando acción por servicio caído...\n");
-            await Task.CompletedTask;
-        }
-    }
+  "NotificationSettings": {
+    "EmailList": [
+      "soporte@banco.com",
+      "infraestructura@banco.com"
+    ],
+    "Template": "AlertaServicioCaido",
+    "System": "MonitorServicios",
+    "Origin": "PinBuzonInteligente"
+  }
 }
