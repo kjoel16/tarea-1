@@ -1,4 +1,11 @@
 {
+  "NotificationSettings": {
+    "EmailList": "kevin.j.hernandez.prov@davivienda.com.hn",
+    "Template": "001",
+    "System": "026",
+    "Origin": "BuzonInteligenteSupport"
+  },
+
   "Logging": {
     "LogLevel": {
       "Default": "Information",
