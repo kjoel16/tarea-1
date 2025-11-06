@@ -1,2 +1,1 @@
-var content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
-HttpResponseMessage response = await HttpClient.PostAsync(Url, content);
+return response.StatusCode != System.Net.HttpStatusCode.RequestTimeout;
