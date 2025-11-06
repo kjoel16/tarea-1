@@ -1,7 +1,2 @@
-public class NotificationSettings
-{
-    public List<string> EmailList { get; set; } = new();
-    public string Template { get; set; }
-    public string System { get; set; }
-    public string Origin { get; set; }
-}
+var content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+HttpResponseMessage response = await HttpClient.PostAsync(Url, content);
