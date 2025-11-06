@@ -1,2 +1,66 @@
-return response != null && 
-       response.StatusCode != System.Net.HttpStatusCode.RequestTimeout;
+using System;
+using System.Net.Http;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+namespace PinBuzonInteligente
+{
+    public class PingWorker : BackgroundService
+    {
+        private readonly ILogger<PingWorker> _logger;
+        private static readonly string Url = "https://166.178.5.189:4064/api/MonoMultiExpCtr/DaviviCashToday";
+        private static readonly int IntervaloPing = 10000;
+
+        private static readonly HttpClientHandler Handler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        };
+        private static readonly HttpClient HttpClient = new HttpClient(Handler);
+
+        public PingWorker(ILogger<PingWorker> logger)
+        {
+            _logger = logger;
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("Servicio de Ping iniciado a las {time}", DateTimeOffset.Now);
+
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    bool activo = await VerificarServicioAsync();
+
+                    if (activo)
+                        _logger.LogInformation("✅ [{time}] Servicio activo", DateTimeOffset.Now);
+                    else
+                        _logger.LogWarning("❌ [{time}] Servicio caído", DateTimeOffset.Now);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al verificar el servicio");
+                }
+
+                await Task.Delay(IntervaloPing, stoppingToken);
+            }
+        }
+
+        private static async Task<bool> VerificarServicioAsync()
+        {
+            try
+            {
+                var content = new StringContent("{}", Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await HttpClient.PostAsync(Url, content);
+                return response != null && response.StatusCode != System.Net.HttpStatusCode.RequestTimeout;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+}
