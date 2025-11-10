@@ -1,21 +1,8 @@
+// Supongamos que tu objeto principal se llama 'response'
+if (response.Totals != null && response.Totals.Length > 1)
 {
-  "NotificationSettings": {
-    "EmailList": "kevin.j.hernandez.prov@davivienda.com.hn",
-    "Template": "001",
-    "System": "026",
-    "Origin": "BuzonInteligenteSupport"
-  },
-
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft": "Warning",
-      "Microsoft.Hosting.Lifetime": "Information"
-    },
-    "EventLog": {
-      "LogLevel": {
-        "Default": "Information"
-      }
-    }
-  }
+    response.Totals = response.Totals
+        .OrderBy(t => t.Total.Currency == "HNL" ? 0 : 1)
+        .ThenBy(t => t.Total.Currency == "USD" ? 1 : 2)
+        .ToArray();
 }
