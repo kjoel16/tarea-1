@@ -1,39 +1,10 @@
-using System.Globalization;
-using System.Text;
+using System.Text.RegularExpressions;
 
-public static class TextoHelper
+public static string LimpiarBasico(string? texto)
 {
-    public static string LimpiarCaracteresEspeciales(string? texto)
-    {
-        if (string.IsNullOrWhiteSpace(texto))
-            return string.Empty;
+    if (string.IsNullOrWhiteSpace(texto))
+        return string.Empty;
 
-        // 1. Normaliza para separar letras de acentos
-        var textoNormalizado = texto.Normalize(NormalizationForm.FormD);
-
-        var sb = new StringBuilder();
-
-        foreach (var c in textoNormalizado)
-        {
-            var categoria = CharUnicodeInfo.GetUnicodeCategory(c);
-
-            // 2. Ignorar los acentos (NonSpacingMark)
-            if (categoria == UnicodeCategory.NonSpacingMark)
-                continue;
-
-            // 3. Solo dejamos letras, números y espacio
-            if (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
-            {
-                sb.Append(c);
-            }
-            // Si quieres permitir guion o guion bajo, descomenta:
-            // else if (c == '-' || c == '_')
-            // {
-            //     sb.Append(c);
-            // }
-        }
-
-        // 4. Volvemos a normalizar el resultado
-        return sb.ToString().Normalize(NormalizationForm.FormC);
-    }
+    // Quita todo lo que no sea A-Z, a-z, 0-9 o espacio
+    return Regex.Replace(texto, @"[^a-zA-Z0-9 ]", "");
 }
