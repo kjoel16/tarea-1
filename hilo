@@ -1,56 +1,39 @@
-private static async Task<bool> VerificarServicioAsync()
+using System.Globalization;
+using System.Text;
+
+public static class TextoHelper
 {
-    try
+    public static string LimpiarCaracteresEspeciales(string? texto)
     {
-        // 🔹 Obtener la ruta correcta del archivo sin importar dónde corra el servicio
-        var basePath = AppContext.BaseDirectory;
-        var jsonPath = Path.Combine(basePath, "appsettings.json");
+        if (string.IsNullOrWhiteSpace(texto))
+            return string.Empty;
 
-        string json = await File.ReadAllTextAsync(jsonPath);
-        var root = JsonSerializer.Deserialize<Dictionary<string, NotificationSettings>>(json);
-        NotificationSettings settings = root["NotificationSettings"];
+        // 1. Normaliza para separar letras de acentos
+        var textoNormalizado = texto.Normalize(NormalizationForm.FormD);
 
-        string Url = settings.Url;
+        var sb = new StringBuilder();
 
-        var content = new StringContent("{}", Encoding.UTF8, "application/json");
-        HttpResponseMessage response = await HttpClient.PostAsync(Url, content);
-
-        return response != null && response.StatusCode != System.Net.HttpStatusCode.RequestTimeout;
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error al verificar el servicio");
-        return false;
-    }
-}
-
-
-private static async Task OnServicioCaidoAsync()
-{
-    try
-    {
-        var basePath = AppContext.BaseDirectory;
-        var jsonPath = Path.Combine(basePath, "appsettings.json");
-
-        string json = await File.ReadAllTextAsync(jsonPath);
-        var root = JsonSerializer.Deserialize<Dictionary<string, NotificationSettings>>(json);
-        NotificationSettings settings = root["NotificationSettings"];
-
-        EmailSenderClient client = new();
-        CreateMailRequestBody body = new()
+        foreach (var c in textoNormalizado)
         {
-            Origin = settings.Origin,
-            System = settings.System,
-            Template = settings.Template,
-            Adresses = settings.EmailList,
-            ParameterList = "",
-            HoldMailShipment = "SI"
-        };
+            var categoria = CharUnicodeInfo.GetUnicodeCategory(c);
 
-        CreateMailResponse response = await client.CreateMailAsync(body.Origin, body.System, body.Template, body.Adresses, body.ParameterList, body.HoldMailShipment);
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error al ejecutar OnServicioCaidoAsync");
+            // 2. Ignorar los acentos (NonSpacingMark)
+            if (categoria == UnicodeCategory.NonSpacingMark)
+                continue;
+
+            // 3. Solo dejamos letras, números y espacio
+            if (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
+            {
+                sb.Append(c);
+            }
+            // Si quieres permitir guion o guion bajo, descomenta:
+            // else if (c == '-' || c == '_')
+            // {
+            //     sb.Append(c);
+            // }
+        }
+
+        // 4. Volvemos a normalizar el resultado
+        return sb.ToString().Normalize(NormalizationForm.FormC);
     }
 }
