@@ -1,5 +1,29 @@
-En lugar de enviar los parámetros de forma explícita o visible (por ejemplo, en cadenas de consulta o textos planos), los valores de entrada se envían en posiciones específicas dentro de una estructura definida (parámetros por posición). Este mecanismo permite:
-	•	Mantener ocultos los datos sensibles utilizados en cada ejecución.
-	•	Evitar la exposición de valores en rutas, logs o mensajes intermedios.
-	•	Estandarizar el formato de entrada y salida entre el API y los programas del core bancario.
-	•	Asegurar que solo se envíen los campos estrictamente necesarios para la operación.
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
+namespace TuProyecto.Alias.Dto
+{
+    public class AliasRequestDto
+    {
+        [JsonPropertyName("aliasValue")]
+        public string AliasValue { get; set; }
+
+        [JsonPropertyName("identification")]
+        public IdentificationDto Identification { get; set; }
+
+        [JsonPropertyName("profile")]
+        public ProfileDto Profile { get; set; }
+
+        [JsonPropertyName("aliasType")]
+        public string AliasType { get; set; }
+
+        [JsonPropertyName("externalId")]
+        public string ExternalId { get; set; }
+
+        [JsonPropertyName("paymentCredentials")]
+        public List<PaymentCredentialDto> PaymentCredentials { get; set; }
+
+        [JsonPropertyName("consent")]
+        public ConsentDto Consent { get; set; }
+    }
+}
