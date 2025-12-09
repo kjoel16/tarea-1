@@ -1,4 +1,5 @@
-El consumo de la API también podrá realizarse mediante un mecanismo de autenticación basado en credenciales.
-Para ello, se proporcionará al proveedor (quien consumirá el servicio) un usuario y una contraseña autorizados específicamente para acceder al API publicado.
-
-Estas credenciales permitirán realizar un primer proceso de autenticación, a partir del cual se generará un token de acceso (Access Token). Dicho token servirá como llave temporal y segura para consumir los distintos endpoints del servicio, evitando el uso constante de usuario y contraseña en cada invocación.
+En lugar de enviar los parámetros de forma explícita o visible (por ejemplo, en cadenas de consulta o textos planos), los valores de entrada se envían en posiciones específicas dentro de una estructura definida (parámetros por posición). Este mecanismo permite:
+	•	Mantener ocultos los datos sensibles utilizados en cada ejecución.
+	•	Evitar la exposición de valores en rutas, logs o mensajes intermedios.
+	•	Estandarizar el formato de entrada y salida entre el API y los programas del core bancario.
+	•	Asegurar que solo se envíen los campos estrictamente necesarios para la operación.
