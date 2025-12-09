@@ -1,29 +1,203 @@
+using System.Text.Json.Serialization;
+
+namespace TuProyecto.Alias.Dto
+{
+    public class IdentificationDto
+    {
+        [JsonPropertyName("verificationDetails")]
+        public VerificationDetailsDto VerificationDetails { get; set; }
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        [JsonPropertyName("value")]
+        public string Value { get; set; }
+    }
+}
+
+
+using System;
+using System.Text.Json.Serialization;
+
+namespace TuProyecto.Alias.Dto
+{
+    public class VerificationDetailsDto
+    {
+        [JsonPropertyName("verifiedPhone")]
+        public bool VerifiedPhone { get; set; }
+
+        [JsonPropertyName("authMethodReference")]
+        public string AuthMethodReference { get; set; }
+
+        [JsonPropertyName("authDateTime")]
+        public DateTime AuthDateTime { get; set; }
+
+        [JsonPropertyName("verifiedEmail")]
+        public bool VerifiedEmail { get; set; }
+
+        [JsonPropertyName("creationDateTime")]
+        public DateTime CreationDateTime { get; set; }
+    }
+}
+
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace TuProyecto.Alias.Dto
 {
-    public class AliasRequestDto
+    public class ProfileDto
     {
-        [JsonPropertyName("aliasValue")]
-        public string AliasValue { get; set; }
+        [JsonPropertyName("middleNameLocal")]
+        public string MiddleNameLocal { get; set; }
 
-        [JsonPropertyName("identification")]
-        public IdentificationDto Identification { get; set; }
+        [JsonPropertyName("lastName")]
+        public string LastName { get; set; }
 
-        [JsonPropertyName("profile")]
-        public ProfileDto Profile { get; set; }
+        [JsonPropertyName("firstName")]
+        public string FirstName { get; set; }
 
-        [JsonPropertyName("aliasType")]
-        public string AliasType { get; set; }
+        [JsonPropertyName("lastNameLocal")]
+        public string LastNameLocal { get; set; }
+
+        [JsonPropertyName("contactInfo")]
+        public List<ContactInfoDto> ContactInfo { get; set; }
+
+        [JsonPropertyName("middleName")]
+        public string MiddleName { get; set; }
+
+        [JsonPropertyName("dateOfBirth")]
+        public DateTime DateOfBirth { get; set; }
+
+        [JsonPropertyName("firstNameLocal")]
+        public string FirstNameLocal { get; set; }
+
+        [JsonPropertyName("preferredName")]
+        public string PreferredName { get; set; }
+    }
+}
+
+using System.Text.Json.Serialization;
+
+namespace TuProyecto.Alias.Dto
+{
+    public class ContactInfoDto
+    {
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        // Teléfono como string para no perder ceros iniciales ni formatos.
+        [JsonPropertyName("value")]
+        public string Value { get; set; }
+    }
+}
+
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
+namespace TuProyecto.Alias.Dto
+{
+    public class PaymentCredentialDto
+    {
+        [JsonPropertyName("nameOnCard")]
+        public string NameOnCard { get; set; }
+
+        [JsonPropertyName("issuerName")]
+        public string IssuerName { get; set; }
+
+        [JsonPropertyName("cardType")]
+        public string CardType { get; set; }
 
         [JsonPropertyName("externalId")]
         public string ExternalId { get; set; }
 
-        [JsonPropertyName("paymentCredentials")]
-        public List<PaymentCredentialDto> PaymentCredentials { get; set; }
+        [JsonPropertyName("preferredFor")]
+        public List<PreferredForDto> PreferredFor { get; set; }
 
-        [JsonPropertyName("consent")]
-        public ConsentDto Consent { get; set; }
+        [JsonPropertyName("billingAddress")]
+        public BillingAddressDto BillingAddress { get; set; }
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        [JsonPropertyName("accountNumber")]
+        public string AccountNumber { get; set; }
+
+        // Viene como "2030-01", lo manejamos como string.
+        [JsonPropertyName("expirationDate")]
+        public string ExpirationDate { get; set; }
+    }
+}
+
+using System.Text.Json.Serialization;
+
+namespace TuProyecto.Alias.Dto
+{
+    public class PreferredForDto
+    {
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+    }
+}
+
+using System.Text.Json.Serialization;
+
+namespace TuProyecto.Alias.Dto
+{
+    public class BillingAddressDto
+    {
+        [JsonPropertyName("country")]
+        public string Country { get; set; }
+
+        // En el ejemplo es numérico, pero es más seguro string.
+        [JsonPropertyName("streetName")]
+        public string StreetName { get; set; }
+
+        [JsonPropertyName("city")]
+        public string City { get; set; }
+
+        // También como string por posibles ceros iniciales.
+        [JsonPropertyName("postalCode")]
+        public string PostalCode { get; set; }
+
+        [JsonPropertyName("addressLine1")]
+        public string AddressLine1 { get; set; }
+
+        [JsonPropertyName("buildingNumber")]
+        public string BuildingNumber { get; set; }
+
+        [JsonPropertyName("addressLine2")]
+        public string AddressLine2 { get; set; }
+
+        [JsonPropertyName("state")]
+        public string State { get; set; }
+
+        [JsonPropertyName("minorSubdivisionCode")]
+        public string MinorSubdivisionCode { get; set; }
+    }
+}
+
+using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
+namespace TuProyecto.Alias.Dto
+{
+    public class ConsentDto
+    {
+        [JsonPropertyName("presenter")]
+        public string Presenter { get; set; }
+
+        [JsonPropertyName("validFromDateTime")]
+        public DateTime ValidFromDateTime { get; set; }
+
+        [JsonPropertyName("intermediaries")]
+        public List<string> Intermediaries { get; set; }
+
+        [JsonPropertyName("version")]
+        public string Version { get; set; }
+
+        [JsonPropertyName("expiryDateTime")]
+        public DateTime ExpiryDateTime { get; set; }
     }
 }
