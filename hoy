@@ -1,1 +1,4 @@
-El consumo de la API se realizará utilizando un esquema de conexión segura basado en certificados digitales SSL/TLS. Esto garantiza que toda la comunicación entre el servidor del banco y el proveedor viaje cifrada, autenticada y protegida contra ataques de interceptación.
+El consumo de la API también podrá realizarse mediante un mecanismo de autenticación basado en credenciales.
+Para ello, se proporcionará al proveedor (quien consumirá el servicio) un usuario y una contraseña autorizados específicamente para acceder al API publicado.
+
+Estas credenciales permitirán realizar un primer proceso de autenticación, a partir del cual se generará un token de acceso (Access Token). Dicho token servirá como llave temporal y segura para consumir los distintos endpoints del servicio, evitando el uso constante de usuario y contraseña en cada invocación.
