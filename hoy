@@ -4,34 +4,70 @@ using System.Text.Json.Serialization;
 
 namespace TuProyecto.Alias.Dto
 {
-    public class AliasDetailResponseDto
+    public class PaymentCredentialStatusDto
     {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("accountNumberType")]
+        public string AccountNumberType { get; set; }
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        [JsonPropertyName("cardType")]
+        public string CardType { get; set; }
+
+        [JsonPropertyName("issuerName")]
+        public string IssuerName { get; set; }
+
+        [JsonPropertyName("nameOnCard")]
+        public string NameOnCard { get; set; }
+
+        [JsonPropertyName("currencyCode")]
+        public string CurrencyCode { get; set; }
+
+        [JsonPropertyName("accountNumber")]
+        public string AccountNumber { get; set; }
+
+        [JsonPropertyName("billingAddress")]
+        public BillingAddressDto BillingAddress { get; set; }
+
+        [JsonPropertyName("expirationDate")]
+        public string ExpirationDate { get; set; }
+
+        [JsonPropertyName("lastFourDigits")]
+        public string LastFourDigits { get; set; }
+
+        [JsonPropertyName("externalId")]
+        public string ExternalId { get; set; }
+
+        [JsonPropertyName("preferredFor")]
+        public List<PreferredForHistoryDto> PreferredFor { get; set; }
+
         [JsonPropertyName("status")]
         public string Status { get; set; }
-
-        [JsonPropertyName("aliasType")]
-        public string AliasType { get; set; }
 
         [JsonPropertyName("createdOn")]
         public DateTime CreatedOn { get; set; }
 
-        [JsonPropertyName("aliasValue")]
-        public string AliasValue { get; set; }
+        [JsonPropertyName("lastUpdatedOn")]
+        public DateTime LastUpdatedOn { get; set; }
+    }
+}
 
-        [JsonPropertyName("lastModifiedOn")]
-        public DateTime LastModifiedOn { get; set; }
+using System;
+using System.Text.Json.Serialization;
 
-        [JsonPropertyName("additionalAliases")]
-        public List<AdditionalAliasDto> AdditionalAliases { get; set; }
+namespace TuProyecto.Alias.Dto
+{
+    public class PreferredForHistoryDto
+    {
+        [JsonPropertyName("date")]
+        public DateTime Date { get; set; }
 
-        [JsonPropertyName("consent")]
-        public ConsentDto Consent { get; set; }
-
-        [JsonPropertyName("profile")]
-        public ProfileDto Profile { get; set; }
-
-        [JsonPropertyName("identification")]
-        public IdentificationDto Identification { get; set; }
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
     }
 }
 
@@ -39,16 +75,34 @@ using System.Text.Json.Serialization;
 
 namespace TuProyecto.Alias.Dto
 {
-    public class AdditionalAliasDto
+    public class BillingAddressDto
     {
-        [JsonPropertyName("status")]
-        public string Status { get; set; }
+        [JsonPropertyName("city")]
+        public string City { get; set; }
 
-        [JsonPropertyName("aliasType")]
-        public string AliasType { get; set; }
+        [JsonPropertyName("state")]
+        public string State { get; set; }
 
-        [JsonPropertyName("aliasValue")]
-        public string AliasValue { get; set; }
+        [JsonPropertyName("country")]
+        public string Country { get; set; }
+
+        [JsonPropertyName("postalCode")]
+        public string PostalCode { get; set; }
+
+        [JsonPropertyName("streetName")]
+        public string StreetName { get; set; }
+
+        [JsonPropertyName("addressLine1")]
+        public string AddressLine1 { get; set; }
+
+        [JsonPropertyName("addressLine2")]
+        public string AddressLine2 { get; set; }
+
+        [JsonPropertyName("buildingNumber")]
+        public string BuildingNumber { get; set; }
+
+        [JsonPropertyName("minorSubdivisionCode")]
+        public string MinorSubdivisionCode { get; set; }
     }
 }
 
