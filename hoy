@@ -3,81 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace TuProyecto.Alias.Dto
 {
-    public class PaymentCredentialDetailDto
+    public class VisaErrorResponseDto
     {
-        [JsonPropertyName("nameOnCard")]
-        public string NameOnCard { get; set; }
+        [JsonPropertyName("errorCode")]
+        public string ErrorCode { get; set; }
 
-        [JsonPropertyName("issuerName")]
-        public string IssuerName { get; set; }
-
-        [JsonPropertyName("cardType")]
-        public string CardType { get; set; }
-
-        [JsonPropertyName("externalId")]
-        public string ExternalId { get; set; }
-
-        [JsonPropertyName("preferredFor")]
-        public List<PreferredForDto> PreferredFor { get; set; }
-
-        [JsonPropertyName("billingAddress")]
-        public BillingAddressDto BillingAddress { get; set; }
-
-        [JsonPropertyName("type")]
-        public string Type { get; set; }
-
-        [JsonPropertyName("accountNumber")]
-        public string AccountNumber { get; set; }
-
-        // Viene como "2030-01", lo tratamos como string
-        [JsonPropertyName("expirationDate")]
-        public string ExpirationDate { get; set; }
-    }
-}
-
-using System.Text.Json.Serialization;
-
-namespace TuProyecto.Alias.Dto
-{
-    public class PreferredForDto
-    {
-        [JsonPropertyName("type")]
-        public string Type { get; set; }
-    }
-}
-
-using System.Text.Json.Serialization;
-
-namespace TuProyecto.Alias.Dto
-{
-    public class BillingAddressDto
-    {
-        [JsonPropertyName("country")]
-        public string Country { get; set; }
-
-        // Convertimos a string por seguridad (ceros, formatos)
-        [JsonPropertyName("streetName")]
-        public string StreetName { get; set; }
-
-        [JsonPropertyName("city")]
-        public string City { get; set; }
-
-        [JsonPropertyName("postalCode")]
-        public string PostalCode { get; set; }
-
-        [JsonPropertyName("addressLine1")]
-        public string AddressLine1 { get; set; }
-
-        [JsonPropertyName("buildingNumber")]
-        public string BuildingNumber { get; set; }
-
-        [JsonPropertyName("addressLine2")]
-        public string AddressLine2 { get; set; }
-
-        [JsonPropertyName("state")]
-        public string State { get; set; }
-
-        [JsonPropertyName("minorSubdivisionCode")]
-        public string MinorSubdivisionCode { get; set; }
+        // Lista de mensajes de error simples
+        [JsonPropertyName("errorMessages")]
+        public List<string> ErrorMessages { get; set; }
     }
 }
