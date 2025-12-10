@@ -1,15 +1,54 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace TuProyecto.Alias.Dto
 {
-    public class VisaErrorResponseDto
+    public class AliasDetailResponseDto
     {
-        [JsonPropertyName("errorCode")]
-        public string ErrorCode { get; set; }
+        [JsonPropertyName("status")]
+        public string Status { get; set; }
 
-        // Lista de mensajes de error simples
-        [JsonPropertyName("errorMessages")]
-        public List<string> ErrorMessages { get; set; }
+        [JsonPropertyName("aliasType")]
+        public string AliasType { get; set; }
+
+        [JsonPropertyName("createdOn")]
+        public DateTime CreatedOn { get; set; }
+
+        [JsonPropertyName("aliasValue")]
+        public string AliasValue { get; set; }
+
+        [JsonPropertyName("lastModifiedOn")]
+        public DateTime LastModifiedOn { get; set; }
+
+        [JsonPropertyName("additionalAliases")]
+        public List<AdditionalAliasDto> AdditionalAliases { get; set; }
+
+        [JsonPropertyName("consent")]
+        public ConsentDto Consent { get; set; }
+
+        [JsonPropertyName("profile")]
+        public ProfileDto Profile { get; set; }
+
+        [JsonPropertyName("identification")]
+        public IdentificationDto Identification { get; set; }
     }
 }
+
+using System.Text.Json.Serialization;
+
+namespace TuProyecto.Alias.Dto
+{
+    public class AdditionalAliasDto
+    {
+        [JsonPropertyName("status")]
+        public string Status { get; set; }
+
+        [JsonPropertyName("aliasType")]
+        public string AliasType { get; set; }
+
+        [JsonPropertyName("aliasValue")]
+        public string AliasValue { get; set; }
+    }
+}
+
