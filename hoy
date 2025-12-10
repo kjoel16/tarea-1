@@ -1,16 +1,14 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace TuProyecto.Alias.Dto
 {
-    public class AliasCoreDataDto
+    public class VisaErrorResponseDto
     {
-        [JsonPropertyName("identification")]
-        public IdentificationDto Identification { get; set; }
+        [JsonPropertyName("errorCode")]
+        public string ErrorCode { get; set; }
 
-        [JsonPropertyName("profile")]
-        public ProfileDto Profile { get; set; }
-
-        [JsonPropertyName("consent")]
-        public ConsentDto Consent { get; set; }
+        [JsonPropertyName("errorMessages")]
+        public List<string> ErrorMessages { get; set; }
     }
 }
