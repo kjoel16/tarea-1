@@ -1,10 +1,42 @@
-using System.Text.RegularExpressions;
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      PRINT
+     A          R MAIN
+     A                                      CA03(03 'Salir')
+     A                                      CA04(04 'Nuevo')
+     A                                      CA07(07 'Rotar')
+     A                                      CA08(08 'Izq')
+     A                                      CA09(09 'Der')
+     A                                      CA10(10 'Bajar')
 
-public static string LimpiarBasico(string? texto)
-{
-    if (string.IsNullOrWhiteSpace(texto))
-        return string.Empty;
+     A                                  1  2'AS/400 TETRIS (5250)'
+     A                                  2  2'Enter=baja  F7=rotar  F8=izq  F9=der  F10=drop'
 
-    // Quita todo lo que no sea A-Z, a-z, 0-9 o espacio
-    return Regex.Replace(texto, @"[^a-zA-Z0-9 ]", "");
-}
+     A            B01           20A  O  3 10
+     A            B02           20A  O  4 10
+     A            B03           20A  O  5 10
+     A            B04           20A  O  6 10
+     A            B05           20A  O  7 10
+     A            B06           20A  O  8 10
+     A            B07           20A  O  9 10
+     A            B08           20A  O 10 10
+     A            B09           20A  O 11 10
+     A            B10           20A  O 12 10
+     A            B11           20A  O 13 10
+     A            B12           20A  O 14 10
+     A            B13           20A  O 15 10
+     A            B14           20A  O 16 10
+     A            B15           20A  O 17 10
+     A            B16           20A  O 18 10
+     A            B17           20A  O 19 10
+     A            B18           20A  O 20 10
+     A            B19           20A  O 21 10
+     A            B20           20A  O 22 10
+
+     A                                  3 40'Puntos:'
+     A            SCORE         9A   O  3 48
+     A                                  4 40'Lineas:'
+     A            LINES         9A   O  4 48
+     A                                  5 40'Nivel :'
+     A            LEVEL         3A   O  5 48
+
+     A            MSG          60A  O 23  2
