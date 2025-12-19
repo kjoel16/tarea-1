@@ -1,25 +1,366 @@
 **free
 ctl-opt dftactgrp(*no) actgrp(*caller) option(*srcstmt:*nodebugio);
 
-dcl-f TETDSPF workstn;
+/* Cambia DINO por el nombre real de tu DSPF */
+dcl-f DINO workstn;
 
-dcl-s msgLocal char(60) inz('Listo. F3=Salir  F4=Nuevo');
+/* ---- Estado del juego ---- */
+dcl-s board char(1) dim(200) inz(*all'0'); // 20*10, '0' vacío, '1' ocupado
+dcl-s scr   char(20) dim(20) inz(*all *blanks);
 
-dou *in03;  // F3
+dcl-s curPiece int(10);
+dcl-s curRot   int(10);   // 0..3
+dcl-s curRow   int(10);   // 1..20
+dcl-s curCol   int(10);   // 1..10
 
-  // pintar algo simple para probar que el DSPF está bien
-  B01 = '[][][][][][][][][][]';
-  B02 = '                ';
-  MSG = msgLocal;
+dcl-s points int(10) inz(0);
+dcl-s lines  int(10) inz(0);
+dcl-s levelN int(10) inz(1);
 
+dcl-s gameOver ind inz(*off);
+dcl-s msgLocal char(60) inz('Listo. Enter=baja  F7=rotar  F8=izq  F9=der  F10=drop');
+
+/* ---- Random simple ---- */
+dcl-s seed int(20) inz(0);
+
+/*
+  Shapes en offsets (x,y) dentro de un 4x4.
+  Index = (piece-1)*16 + rot*4 + block  (piece 1..7, rot 0..3, block 1..4)
+*/
+dcl-s px int(10) dim(112) inz(
+  // PIEZA 1: I
+  0,1,  1,1,  2,1,  3,1,
+  1,0,  1,1,  1,2,  1,3,
+  0,1,  1,1,  2,1,  3,1,
+  1,0,  1,1,  1,2,  1,3,
+
+  // PIEZA 2: O
+  1,1,  2,1,  1,2,  2,2,
+  1,1,  2,1,  1,2,  2,2,
+  1,1,  2,1,  1,2,  2,2,
+  1,1,  2,1,  1,2,  2,2,
+
+  // PIEZA 3: T
+  1,1,  0,2,  1,2,  2,2,
+  1,1,  1,2,  2,2,  1,3,
+  0,2,  1,2,  2,2,  1,3,
+  1,1,  0,2,  1,2,  1,3,
+
+  // PIEZA 4: S
+  1,1,  2,1,  0,2,  1,2,
+  1,0,  1,1,  2,1,  2,2,
+  1,1,  2,1,  0,2,  1,2,
+  1,0,  1,1,  2,1,  2,2,
+
+  // PIEZA 5: Z
+  0,1,  1,1,  1,2,  2,2,
+  2,0,  1,1,  2,1,  1,2,
+  0,1,  1,1,  1,2,  2,2,
+  2,0,  1,1,  2,1,  1,2,
+
+  // PIEZA 6: J
+  0,1,  0,2,  1,2,  2,2,
+  1,1,  2,1,  1,2,  1,3,
+  0,2,  1,2,  2,2,  2,3,
+  1,1,  1,2,  0,3,  1,3,
+
+  // PIEZA 7: L
+  2,1,  0,2,  1,2,  2,2,
+  1,1,  1,2,  1,3,  2,3,
+  0,2,  1,2,  2,2,  0,3,
+  0,1,  1,1,  1,2,  1,3
+);
+
+dcl-s py int(10) dim(112) inz(
+  // PIEZA 1: I
+  1,1,1,1,
+  0,1,2,3,
+  1,1,1,1,
+  0,1,2,3,
+
+  // PIEZA 2: O
+  1,1,2,2,
+  1,1,2,2,
+  1,1,2,2,
+  1,1,2,2,
+
+  // PIEZA 3: T
+  1,2,2,2,
+  1,2,2,3,
+  2,2,2,3,
+  1,2,2,3,
+
+  // PIEZA 4: S
+  1,1,2,2,
+  0,1,1,2,
+  1,1,2,2,
+  0,1,1,2,
+
+  // PIEZA 5: Z
+  1,1,2,2,
+  0,1,1,2,
+  1,1,2,2,
+  0,1,1,2,
+
+  // PIEZA 6: J
+  1,2,2,2,
+  1,1,2,3,
+  2,2,2,3,
+  1,2,3,3,
+
+  // PIEZA 7: L
+  1,2,2,2,
+  1,2,3,3,
+  2,2,2,3,
+  1,1,2,3
+);
+
+/* ---- Prototipos ---- */
+dcl-proc initGame; end-proc;
+dcl-proc spawnPiece; end-proc;
+dcl-proc nextPiece; end-proc;
+dcl-proc canPlace ind; dcl-pi *n ind;
+  pPiece int(10); pRot int(10); pRow int(10); pCol int(10);
+end-pi; end-proc;
+
+dcl-proc lockPiece; end-proc;
+dcl-proc clearLines; end-proc;
+dcl-proc render; end-proc;
+
+dcl-proc idxBoard int(10); dcl-pi *n int(10);
+  r int(10); c int(10);
+end-pi; end-proc;
+
+/* ---- Programa ---- */
+initGame();
+
+dou *in03; // F3 salir
+
+  render();
   write MAIN;
   read  MAIN;
 
-  if *in04; // F4
-     msgLocal = 'Nuevo (ok). Presiona F3 para salir.';
+  if *in04; // F4 nuevo
+    initGame();
+    iter;
+  endif;
+
+  if gameOver;
+    msgLocal = 'GAME OVER. F4=Nuevo / F3=Salir';
+    iter;
+  endif;
+
+  // Default: Enter baja 1
+  dcl-s dx int(10) inz(0);
+  dcl-s dy int(10) inz(1);
+  dcl-s tryRot int(10) inz(curRot);
+
+  if *in07; // rotar
+    dy = 0;
+    tryRot = (curRot + 1) % 4;
+  elseif *in08; // izq
+    dy = 0;
+    dx = -1;
+  elseif *in09; // der
+    dy = 0;
+    dx = 1;
+  elseif *in10; // drop
+    // hard drop
+    dou canPlace(curPiece: curRot: curRow + 1: curCol);
+      curRow += 1;
+    enddo;
+    lockPiece();
+    clearLines();
+    spawnPiece();
+    iter;
+  endif;
+
+  // movimiento normal (izq/der/rot/enter)
+  if canPlace(curPiece: tryRot: curRow + dy: curCol + dx);
+    curRow += dy;
+    curCol += dx;
+    curRot = tryRot;
+  else;
+    // si intentó bajar y no pudo => fija pieza
+    if dy = 1;
+      lockPiece();
+      clearLines();
+      spawnPiece();
+    endif;
   endif;
 
 enddo;
 
 *inlr = *on;
 return;
+
+/* =========================
+   Implementación
+   ========================= */
+
+dcl-proc initGame;
+  board = *all'0';
+  points = 0;
+  lines  = 0;
+  levelN = 1;
+  gameOver = *off;
+  msgLocal = 'Listo. Enter=baja  F7=rotar  F8=izq  F9=der  F10=drop';
+
+  seed = %int(%subdt(%timestamp(): *milliseconds));
+  spawnPiece();
+end-proc;
+
+dcl-proc nextPiece;
+  seed = seed + %int(%subdt(%timestamp(): *milliseconds));
+  if seed < 0;
+    seed = -seed;
+  endif;
+  curPiece = %rem(seed: 7) + 1;
+end-proc;
+
+dcl-proc spawnPiece;
+  nextPiece();
+  curRot = 0;
+  curRow = 1;
+  curCol = 4; // centro
+
+  if not canPlace(curPiece: curRot: curRow: curCol);
+    gameOver = *on;
+  endif;
+end-proc;
+
+dcl-proc idxBoard;
+  return ( (r - 1) * 10 ) + c;
+end-proc;
+
+dcl-proc canPlace;
+  dcl-s b int(10);
+  dcl-s base int(10);
+  dcl-s rr int(10);
+  dcl-s cc int(10);
+  dcl-s ii int(10);
+
+  base = (pPiece - 1) * 16 + pRot * 4;
+
+  for b = 1 to 4;
+    ii = base + b;            // 1..112
+    cc = pCol + px(ii);
+    rr = pRow + py(ii);
+
+    if rr < 1 or rr > 20 or cc < 1 or cc > 10;
+      return *off;
+    endif;
+
+    if board(idxBoard(rr:cc)) = '1';
+      return *off;
+    endif;
+  endfor;
+
+  return *on;
+end-proc;
+
+dcl-proc lockPiece;
+  dcl-s b int(10);
+  dcl-s base int(10);
+  dcl-s rr int(10);
+  dcl-s cc int(10);
+  dcl-s ii int(10);
+
+  base = (curPiece - 1) * 16 + curRot * 4;
+
+  for b = 1 to 4;
+    ii = base + b;
+    cc = curCol + px(ii);
+    rr = curRow + py(ii);
+    if rr >= 1 and rr <= 20 and cc >= 1 and cc <= 10;
+      board(idxBoard(rr:cc)) = '1';
+    endif;
+  endfor;
+end-proc;
+
+dcl-proc clearLines;
+  dcl-s r int(10);
+  dcl-s c int(10);
+  dcl-s full ind;
+  dcl-s rr int(10);
+
+  for r = 20 downto 1;
+    full = *on;
+    for c = 1 to 10;
+      if board(idxBoard(r:c)) <> '1';
+        full = *off;
+        leave;
+      endif;
+    endfor;
+
+    if full;
+      // bajar filas
+      for rr = r downto 2;
+        for c = 1 to 10;
+          board(idxBoard(rr:c)) = board(idxBoard(rr-1:c));
+        endfor;
+      endfor;
+      // limpiar fila 1
+      for c = 1 to 10;
+        board(idxBoard(1:c)) = '0';
+      endfor;
+
+      lines += 1;
+      points += 100;
+      levelN = (lines / 10) + 1;
+
+      r += 1; // re-evaluar misma fila
+    endif;
+  endfor;
+end-proc;
+
+dcl-proc render;
+  dcl-s r int(10);
+  dcl-s c int(10);
+  dcl-s pos int(10);
+  dcl-s cell char(2);
+  dcl-s b int(10);
+  dcl-s base int(10);
+  dcl-s rr int(10);
+  dcl-s cc int(10);
+  dcl-s ii int(10);
+
+  // base del tablero fijo
+  for r = 1 to 20;
+    scr(r) = *blanks;
+    for c = 1 to 10;
+      if board(idxBoard(r:c)) = '1';
+        cell = '[]';
+      else;
+        cell = '  ';
+      endif;
+
+      pos = (c - 1) * 2 + 1;
+      %subst(scr(r): pos: 2) = cell;
+    endfor;
+  endfor;
+
+  // overlay pieza actual
+  base = (curPiece - 1) * 16 + curRot * 4;
+  for b = 1 to 4;
+    ii = base + b;
+    cc = curCol + px(ii);
+    rr = curRow + py(ii);
+
+    if rr >= 1 and rr <= 20 and cc >= 1 and cc <= 10;
+      pos = (cc - 1) * 2 + 1;
+      %subst(scr(rr): pos: 2) = '##';
+    endif;
+  endfor;
+
+  // mapear a campos de pantalla
+  B01 = scr(1);  B02 = scr(2);  B03 = scr(3);  B04 = scr(4);  B05 = scr(5);
+  B06 = scr(6);  B07 = scr(7);  B08 = scr(8);  B09 = scr(9);  B10 = scr(10);
+  B11 = scr(11); B12 = scr(12); B13 = scr(13); B14 = scr(14); B15 = scr(15);
+  B16 = scr(16); B17 = scr(17); B18 = scr(18); B19 = scr(19); B20 = scr(20);
+
+  MSG = msgLocal;
+  SCORE = %char(points);
+  LINES = %char(lines);
+  LEVEL = %char(levelN);
+end-proc;
