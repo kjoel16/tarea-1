@@ -4,13 +4,8 @@
      A                                      CA03(03 'Salir')
      A                                      CA04(04 'Nuevo')
      A                                      CA07(07 'Rotar')
-     A                                      CA08(08 'Izq')
-     A                                      CA09(09 'Der')
-     A                                      CA10(10 'Bajar')
-
-     A                                  1  2'AS/400 TETRIS (5250)'
+     A                                  1  2'AS/400 TETRIS'
      A                                  2  2'Enter=baja  F7=rotar  F8=izq  F9=der  F10=drop'
-
      A            B01           20A  O  3 10
      A            B02           20A  O  4 10
      A            B03           20A  O  5 10
@@ -31,12 +26,3 @@
      A            B18           20A  O 20 10
      A            B19           20A  O 21 10
      A            B20           20A  O 22 10
-
-     A                                  3 40'Puntos:'
-     A            SCORE         9A   O  3 48
-     A                                  4 40'Lineas:'
-     A            LINES         9A   O  4 48
-     A                                  5 40'Nivel :'
-     A            LEVEL         3A   O  5 48
-
-     A            MSG          60A  O 23  2
