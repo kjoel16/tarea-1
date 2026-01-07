@@ -1,23 +1,37 @@
-private static string SqlStr(string value)
-{
-    if (value == null) return "NULL";
-    return $"'{value.Replace("'", "''")}'"; // escape SQL
-}
-
-// ...
-
-string row =
-    $"({SqlStr(fechaActual)}," +
-    $"{SqlStr(fechaTrans)}," +
-    $"{SqlStr(machine)}," +
-    $"{SqlStr(headers.HRequestId)}," +
-    $"{SqlStr(headers.HChannel)}," +
-    $"{SqlStr(headers.HTerminal)}," +
-    $"{SqlStr(headers.HOrganization)}," +
-    $"{SqlStr(headers.HUserId)}," +
-    $"{SqlStr(headers.HProvider)}," +
-    $"{SqlStr(headers.HSessionId)}," +
-    $"{SqlStr(headers.HClientIp)}," +
-    $"{SqlStr(headers.HTimestamp)})";
-
-sqlInsertRows.Add(row);
+                  ┌─────────────────────────────────────────────┐
+                  │               CANAL / CLIENTE               │
+                  └───────────────┬─────────────────────────────┘
+                                  │ 1) POST /deposits
+                                  ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                     SPRING BOOT API (COMMAND SERVICE)                    │
+│  - valida mínimo                                                         │
+│  - idempotencia                                                          │
+│  - registra en DB2 (RECEIVED)                                            │
+│  - publica a IBM MQ (mensaje persistente)                                │
+│  - responde 202 inmediato con trackingId                                 │
+└───────────────┬───────────────────────────┬──────────────────────────────┘
+                │                           │
+                │ 2) insert/update          │ 3) MQ PUT (PERSISTENT)
+                ▼                           ▼
+        ┌───────────────┐           ┌─────────────────────┐
+        │   DB2 / AS400  │           │   IBM MQ (QMGR)      │
+        │ DEPOSIT_REQUEST│           │  Q.DEPOSIT.IN        │
+        │ + AUDIT/OUTBOX │           │  Q.DEPOSIT.RETRY     │
+        └───────────────┘           │  Q.DEPOSIT.DLQ       │
+                                    └──────────┬───────────┘
+                                               │ 4) consume
+                                               ▼
+                              ┌───────────────────────────────────┐
+                              │     WORKER / CORE-ADAPTER          │
+                              │ (Java/RPG/CL en IBM i o servidor)  │
+                              │  - lee MQ                          │
+                              │  - llama core (RPG/servicio)        │
+                              │  - actualiza DB2 (APPLIED/REJECTED) │
+                              │  - maneja reintentos y DLQ          │
+                              └──────────────┬─────────────────────┘
+                                             │ 5) status query
+                                             ▼
+                              ┌───────────────────────────────────┐
+                              │  API: GET /deposits/{trackingId}   │
+                              └───────────────────────────────────┘
