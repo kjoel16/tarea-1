@@ -1,19 +1,35 @@
-Cliente                 API Spring Boot             DB2                 IBM MQ             Worker/Core
-  |  POST /deposits          |                       |                    |                  |
-  |------------------------->|                       |                    |                  |
-  |                          | validar + idempotencia |                    |                  |
-  |                          | INSERT request(RECEIVED)|------------------>|                  |
-  |                          |----------------------->|                    |                  |
-  |                          | MQ PUT (PERSISTENT)    |                    |                  |
-  |                          |-------------------------------------------->| (Q.DEPOSIT.IN)   |
-  |                          | RESP 202 (trackingId)  |                    |                  |
-  |<-------------------------|                       |                    |                  |
-  |                          |                       |                    |                  |
-  |                          |                       |                    |  consume         |
-  |                          |                       |                    |----------------->|
-  |                          |                       |                    |                  | call core
-  |                          |                       | UPDATE status      |                  |
-  |                          |<----------------------|                    |                  |
-  |  GET /deposits/{id}      |                       |                    |                  |
-  |------------------------->| SELECT status         |                    |                  |
-  |<-------------------------| (PROCESSING/APPLIED)  |                    |                  |
+package com.demo.apias400.as400;
+
+import com.ibm.as400.access.*;
+
+public class As400Client {
+
+    private final String host = "IP_AS400";
+    private final String user = "USUARIO";
+    private final String password = "PASSWORD";
+
+    public String llamarPrograma(String cuenta) throws Exception {
+
+        AS400 as400 = new AS400(host, user, password);
+
+        ProgramCall programCall = new ProgramCall(as400);
+
+        ProgramParameter[] params = new ProgramParameter[1];
+
+        // Parámetro de entrada (ej: cuenta 10 posiciones)
+        AS400Text text = new AS400Text(10, as400);
+        params[0] = new ProgramParameter(text.toBytes(cuenta));
+
+        programCall.setProgram(
+            "/QSYS.LIB/BIBLIOTECA.LIB/PROGRAMA.PGM",
+            params
+        );
+
+        if (!programCall.run()) {
+            throw new RuntimeException("Error ejecutando programa AS400");
+        }
+
+        // Simulación de respuesta por ahora
+        return "OK";
+    }
+}
