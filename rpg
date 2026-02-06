@@ -1,8 +1,56 @@
-<-.(`-')  (`-')  _      (`-')  _     <-. (`-')_ 
- __( OO)  ( OO).-/     _(OO ) (_)       \( OO) )
-'-'. ,--.(,------.,--.(_/,-.\ ,-(`-'),--./ ,--/ 
-|  .'   / |  .---'\   \ / (_/ | ( OO)|   \ |  | 
-|      /)(|  '--.  \   /   /  |  |  )|  . '|  |)
-|  .   '  |  .--' _ \     /_)(|  |_/ |  |\    | 
-|  |\   \ |  `---.\-'\   /    |  |'->|  | \   | 
-`--' '--' `------'    `-'     `--'   `--'  `--' 
+@startuml
+title Flujo de Caja Bancaria - Atención en Ventanilla
+
+actor Cliente
+participant Cajero
+participant "Sistema de Caja" as Sistema
+participant "Core Bancario" as Core
+database "Base de Datos" as DB
+participant Impresora
+
+== Inicio de atención ==
+Cliente -> Cajero : Solicita transacción\n(retiro/depósito/consulta)
+Cajero -> Sistema : Ingresa tipo de transacción\ny número de cuenta
+
+== Validación de cuenta ==
+Sistema -> Core : Validar cuenta
+Core -> DB : Consultar datos de cuenta
+DB --> Core : Datos de cuenta
+Core --> Sistema : Cuenta válida / inválida
+
+alt Cuenta inválida
+    Sistema -> Cajero : Mostrar error
+    Cajero -> Cliente : Notificar problema
+else Cuenta válida
+
+    == Ingreso de monto ==
+    Cajero -> Sistema : Ingresar monto
+
+    Sistema -> Core : Validar saldo y estado
+    Core -> DB : Consultar saldo
+    DB --> Core : Saldo actual
+    Core --> Sistema : Resultado validación
+
+    alt Saldo insuficiente
+        Sistema -> Cajero : Mostrar rechazo
+        Cajero -> Cliente : Informar fondos insuficientes
+    else Aprobado
+
+        == Procesamiento ==
+        Sistema -> Core : Ejecutar transacción
+        Core -> DB : Actualizar saldo
+        DB --> Core : Confirmación
+        Core --> Sistema : Transacción exitosa
+
+        == Comprobante ==
+        Sistema -> Impresora : Generar recibo
+        Impresora --> Cajero : Recibo impreso
+
+        Cajero -> Cliente : Entregar dinero/recibo
+    end
+end
+
+== Fin del proceso ==
+Sistema -> Sistema : Registrar log de transacción
+
+@enduml
