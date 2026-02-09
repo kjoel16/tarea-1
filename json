@@ -1,13 +1,29 @@
-package com.mycompany.api.transaccions;
+package com.mycompany.api.transaccions.config;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-@SpringBootApplication
-public class API01Transaccions {
+@Component
+public class As400Properties {
 
-    public static void main(String[] args) {
-        SpringApplication.run(API01Transaccions.class, args);
+    @Value("${as400.host}")
+    private String host;
+
+    @Value("${as400.user}")
+    private String user;
+
+    @Value("${as400.password}")
+    private String password;
+
+    public String getHost() {
+        return host;
     }
 
+    public String getUser() {
+        return user;
+    }
+
+    public String getPassword() {
+        return password;
+    }
 }
