@@ -1,8 +1,31 @@
-String user = AES256Decrypt.decrypt(props.getUser(), props.getKey());
-String pass = AES256Decrypt.decrypt(props.getPassword(), props.getKey());
+@Service
+public class As400ConnectionService {
 
-AS400 as400 = new AS400(
-    props.getHost(),
-    user,
-    pass
-);
+    @Autowired
+    private As400Properties properties;
+
+    public AS400 getConnection() {
+
+        try {
+
+            String user = AES256Decrypt.decrypt(
+                properties.getUser(),
+                properties.getKey()
+            );
+
+            String pass = AES256Decrypt.decrypt(
+                properties.getPassword(),
+                properties.getKey()
+            );
+
+            return new AS400(
+                properties.getHost(),
+                user,
+                pass
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error desencriptando credenciales AS400", e);
+        }
+    }
+}
