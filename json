@@ -1,21 +1,21 @@
-package com.mycompany.api.transaccions.service;
+package com.mycompany.api.transaccions.dto;
 
-import com.ibm.as400.access.AS400;
-import com.mycompany.api.transaccions.config.As400Properties;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+public class HeaderDTO {
 
-@Service
-public class As400ConnectionService {
+    private String canal;
+    private String usuario;
+    private String transaccion;
+    private String fecha;
 
-    @Autowired
-    private As400Properties properties;
+    public String getCanal() { return canal; }
+    public void setCanal(String canal) { this.canal = canal; }
 
-    public AS400 getConnection() {
-        return new AS400(
-                properties.getHost(),
-                properties.getUser(),
-                properties.getPassword()
-        );
-    }
+    public String getUsuario() { return usuario; }
+    public void setUsuario(String usuario) { this.usuario = usuario; }
+
+    public String getTransaccion() { return transaccion; }
+    public void setTransaccion(String transaccion) { this.transaccion = transaccion; }
+
+    public String getFecha() { return fecha; }
+    public void setFecha(String fecha) { this.fecha = fecha; }
 }
