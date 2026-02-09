@@ -1,13 +1,13 @@
 package com.mycompany.api.transaccions.dto;
 
-public class HeaderResponseDTO {
+public class ResponseDTO {
 
-    private String codigo;
-    private String mensaje;
+    private HeaderResponseDTO header;
+    private Object data;
 
-    public String getCodigo() { return codigo; }
-    public void setCodigo(String codigo) { this.codigo = codigo; }
+    public HeaderResponseDTO getHeader() { return header; }
+    public void setHeader(HeaderResponseDTO header) { this.header = header; }
 
-    public String getMensaje() { return mensaje; }
-    public void setMensaje(String mensaje) { this.mensaje = mensaje; }
+    public Object getData() { return data; }
+    public void setData(Object data) { this.data = data; }
 }
