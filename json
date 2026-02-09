@@ -1,60 +1,34 @@
-package com.mycompany.api.transaccions.service;
+package com.mycompany.api.transaccions.controller;
 
-import com.ibm.as400.access.*;
-import com.mycompany.api.transaccions.config.As400Properties;
-import com.mycompany.api.transaccions.dto.TransaccionDataDTO;
-import com.mycompany.api.transaccions.dto.TransaccionResultDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mycompany.api.transaccions.dto.*;
+import com.mycompany.api.transaccions.service.TransaccionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
 
-@Service
-public class TransaccionService {
+@RestController
+@RequestMapping("/api/transaccion")
+public class TransaccionController {
 
     @Autowired
-    private As400Properties props;
+    private TransaccionService service;
 
-    public TransaccionResultDTO ejecutar(TransaccionDataDTO dto) throws Exception {
+    @PostMapping
+    public ResponseDTO ejecutar(@RequestBody RequestDTO request) throws Exception {
 
-        AS400 as400 = new AS400(
-                props.getHost(),
-                props.getUser(),
-                props.getPassword()
-        );
+        TransaccionDataDTO data =
+                new ObjectMapper().convertValue(request.getData(), TransaccionDataDTO.class);
 
-        ProgramParameter[] params = new ProgramParameter[18];
+        TransaccionResultDTO result = service.ejecutar(data);
 
-        params[0] = new ProgramParameter(new AS400Text(10).toBytes(dto.getTerminal()));
-        params[1] = new ProgramParameter(new AS400Text(4).toBytes(dto.getCajero()));
-        params[2] = new ProgramParameter(new AS400Text(6).toBytes(dto.getCodTrn()));
-        params[3] = new ProgramParameter(new AS400Text(1).toBytes(dto.getMonedaTrn()));
-        params[4] = new ProgramParameter(new AS400Text(13).toBytes(dto.getCuenta()));
-        params[5] = new ProgramParameter(new AS400Text(14).toBytes(dto.getMontoEfectivo()));
-        params[6] = new ProgramParameter(new AS400Text(14).toBytes(dto.getMontoCheques()));
-        params[7] = new ProgramParameter(new AS400Text(14).toBytes(dto.getTotalTrn()));
-        params[8] = new ProgramParameter(new AS400Text(8).toBytes(dto.getRefe1()));
-        params[9] = new ProgramParameter(new AS400Text(8).toBytes(dto.getRefe2()));
-        params[10] = new ProgramParameter(new AS400Text(40).toBytes(dto.getDescr1()));
-        params[11] = new ProgramParameter(new AS400Text(40).toBytes(dto.getDescr2()));
-        params[12] = new ProgramParameter(new AS400Text(40).toBytes(dto.getDescr3()));
-        params[13] = new ProgramParameter(new AS400Text(40).toBytes(dto.getDescr4()));
-        params[14] = new ProgramParameter(new AS400Text(2).toBytes(dto.getDescr5()));
-        params[15] = new ProgramParameter(new AS400Text(4).toBytes(dto.getDescr6()));
-        params[16] = new ProgramParameter(5);  // COD ERROR salida
-        params[17] = new ProgramParameter(50); // DESC ERROR salida
+        HeaderResponseDTO header = new HeaderResponseDTO();
+        header.setCodigo(result.getCodErr());
+        header.setMensaje(result.getDescErr());
 
-        ProgramCall program = new ProgramCall(as400);
-        program.setProgram("/QSYS.LIB/LJTELLER.LIB/JTLAB001.PGM", params);
+        ResponseDTO response = new ResponseDTO();
+        response.setHeader(header);
+        response.setData(result);
 
-        if (!program.run()) {
-            throw new Exception("Error llamando programa AS400");
-        }
-
-        AS400Text textErr = new AS400Text(5);
-        AS400Text textDesc = new AS400Text(50);
-
-        String codErr = (String) textErr.toObject(params[16].getOutputData());
-        String descErr = (String) textDesc.toObject(params[17].getOutputData());
-
-        return new TransaccionResultDTO(codErr, descErr);
+        return response;
     }
 }
