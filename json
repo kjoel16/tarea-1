@@ -1,14 +1,5 @@
-byte[] codBytes = params[19].getOutputData();
-byte[] descBytes = params[20].getOutputData();
+import java.util.UUID;
 
-System.out.println("RAW COD BYTES: " + codBytes);
-System.out.println("RAW DESC BYTES: " + descBytes);
+String guid = UUID.randomUUID().toString();
 
-AS400Text textErr = new AS400Text(5);
-AS400Text textDesc = new AS400Text(50);
-
-String codErr = (String) textErr.toObject(codBytes);
-String descErr = (String) textDesc.toObject(descBytes);
-
-System.out.println("CODIGO: [" + codErr + "]");
-System.out.println("DESCRIPCION: [" + descErr + "]");
+System.out.println(guid);
