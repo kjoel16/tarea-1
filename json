@@ -1,15 +1,158 @@
 package com.mycompany.api.transaccions.dto;
 
-public class TransaccionResultDTO {
+public class TransaccionDataDTO {
 
-    private String codErr;
-    private String descErr;
+    private String terminal;
+    private String cajero;
+    private String codTrn;
+    private String monedaTrn;
+    private String cuenta;
+    private String montoEfectivo;
+    private String montoCheques;
+    private String totalTrn;
+    private String refe1;
+    private String refe2;
+    private String descr1;
+    private String descr2;
+    private String descr3;
+    private String descr4;
+    private String descr5;
+    private String descr6;
+    private String dqCodeW;
 
-    public TransaccionResultDTO(String codErr, String descErr) {
-        this.codErr = codErr;
-        this.descErr = descErr;
+    public String getTerminal() {
+        return terminal;
     }
 
-    public String getCodErr() { return codErr; }
-    public String getDescErr() { return descErr; }
+    public void setTerminal(String terminal) {
+        this.terminal = terminal;
+    }
+
+    public String getCajero() {
+        return cajero;
+    }
+
+    public void setCajero(String cajero) {
+        this.cajero = cajero;
+    }
+
+    public String getCodTrn() {
+        return codTrn;
+    }
+
+    public void setCodTrn(String codTrn) {
+        this.codTrn = codTrn;
+    }
+
+    public String getMonedaTrn() {
+        return monedaTrn;
+    }
+
+    public void setMonedaTrn(String monedaTrn) {
+        this.monedaTrn = monedaTrn;
+    }
+
+    public String getCuenta() {
+        return cuenta;
+    }
+
+    public void setCuenta(String cuenta) {
+        this.cuenta = cuenta;
+    }
+
+    public String getMontoEfectivo() {
+        return montoEfectivo;
+    }
+
+    public void setMontoEfectivo(String montoEfectivo) {
+        this.montoEfectivo = montoEfectivo;
+    }
+
+    public String getMontoCheques() {
+        return montoCheques;
+    }
+
+    public void setMontoCheques(String montoCheques) {
+        this.montoCheques = montoCheques;
+    }
+
+    public String getTotalTrn() {
+        return totalTrn;
+    }
+
+    public void setTotalTrn(String totalTrn) {
+        this.totalTrn = totalTrn;
+    }
+
+    public String getRefe1() {
+        return refe1;
+    }
+
+    public void setRefe1(String refe1) {
+        this.refe1 = refe1;
+    }
+
+    public String getRefe2() {
+        return refe2;
+    }
+
+    public void setRefe2(String refe2) {
+        this.refe2 = refe2;
+    }
+
+    public String getDescr1() {
+        return descr1;
+    }
+
+    public void setDescr1(String descr1) {
+        this.descr1 = descr1;
+    }
+
+    public String getDescr2() {
+        return descr2;
+    }
+
+    public void setDescr2(String descr2) {
+        this.descr2 = descr2;
+    }
+
+    public String getDescr3() {
+        return descr3;
+    }
+
+    public void setDescr3(String descr3) {
+        this.descr3 = descr3;
+    }
+
+    public String getDescr4() {
+        return descr4;
+    }
+
+    public void setDescr4(String descr4) {
+        this.descr4 = descr4;
+    }
+
+    public String getDescr5() {
+        return descr5;
+    }
+
+    public void setDescr5(String descr5) {
+        this.descr5 = descr5;
+    }
+
+    public String getDescr6() {
+        return descr6;
+    }
+
+    public void setDescr6(String descr6) {
+        this.descr6 = descr6;
+    }
+
+    public String getDqCodeW() {
+        return dqCodeW;
+    }
+
+    public void setDqCodeW(String dqCodeW) {
+        this.dqCodeW = dqCodeW;
+    }
 }
