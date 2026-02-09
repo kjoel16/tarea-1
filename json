@@ -1,21 +1,13 @@
 package com.mycompany.api.transaccions.dto;
 
-public class HeaderDTO {
+public class RequestDTO {
 
-    private String canal;
-    private String usuario;
-    private String transaccion;
-    private String fecha;
+    private HeaderDTO header;
+    private Object data;
 
-    public String getCanal() { return canal; }
-    public void setCanal(String canal) { this.canal = canal; }
+    public HeaderDTO getHeader() { return header; }
+    public void setHeader(HeaderDTO header) { this.header = header; }
 
-    public String getUsuario() { return usuario; }
-    public void setUsuario(String usuario) { this.usuario = usuario; }
-
-    public String getTransaccion() { return transaccion; }
-    public void setTransaccion(String transaccion) { this.transaccion = transaccion; }
-
-    public String getFecha() { return fecha; }
-    public void setFecha(String fecha) { this.fecha = fecha; }
+    public Object getData() { return data; }
+    public void setData(Object data) { this.data = data; }
 }
