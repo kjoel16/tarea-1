@@ -1,56 +1,28 @@
-@startuml
-title Flujo de Caja Bancaria - Atención en Ventanilla
-
-actor Cliente
-participant Cajero
-participant "Sistema de Caja" as Sistema
-participant "Core Bancario" as Core
-database "Base de Datos" as DB
-participant Impresora
-
-== Inicio de atención ==
-Cliente -> Cajero : Solicita transacción\n(retiro/depósito/consulta)
-Cajero -> Sistema : Ingresa tipo de transacción\ny número de cuenta
-
-== Validación de cuenta ==
-Sistema -> Core : Validar cuenta
-Core -> DB : Consultar datos de cuenta
-DB --> Core : Datos de cuenta
-Core --> Sistema : Cuenta válida / inválida
-
-alt Cuenta inválida
-    Sistema -> Cajero : Mostrar error
-    Cajero -> Cliente : Notificar problema
-else Cuenta válida
-
-    == Ingreso de monto ==
-    Cajero -> Sistema : Ingresar monto
-
-    Sistema -> Core : Validar saldo y estado
-    Core -> DB : Consultar saldo
-    DB --> Core : Saldo actual
-    Core --> Sistema : Resultado validación
-
-    alt Saldo insuficiente
-        Sistema -> Cajero : Mostrar rechazo
-        Cajero -> Cliente : Informar fondos insuficientes
-    else Aprobado
-
-        == Procesamiento ==
-        Sistema -> Core : Ejecutar transacción
-        Core -> DB : Actualizar saldo
-        DB --> Core : Confirmación
-        Core --> Sistema : Transacción exitosa
-
-        == Comprobante ==
-        Sistema -> Impresora : Generar recibo
-        Impresora --> Cajero : Recibo impreso
-
-        Cajero -> Cliente : Entregar dinero/recibo
-    end
-end
-
-== Fin del proceso ==
-Sistema -> Sistema : Registrar log de transacción
-
-@enduml
+{
+  "header": {
+    "canal": "CAJA",
+    "usuario": "TESTUSR",
+    "terminal": "TERM001",
+    "fecha": "20260208",
+    "hora": "214500"
+  },
+  "data": {
+    "terminal": "TERM001",
+    "cajero": "0001",
+    "codTrn": "TR0001",
+    "monedaTrn": "L",
+    "cuenta": "1234567890123",
+    "montoEfectivo": "00000001000000",
+    "montoCheques": "00000000000000",
+    "totalTrn": "00000001000000",
+    "refe1": "REF00001",
+    "refe2": "REF00002",
+    "descr1": "DEPOSITO EN EFECTIVO",
+    "descr2": "CAJA PRINCIPAL",
+    "descr3": "CLIENTE BANCA",
+    "descr4": "OPERACION NORMAL",
+    "descr5": "01",
+    "descr6": "0001",
+    "dqCodeW": "00001"
+  }
+}
