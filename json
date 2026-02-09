@@ -1,31 +1,19 @@
-@Service
-public class As400ConnectionService {
-
-    @Autowired
-    private As400Properties properties;
-
-    public AS400 getConnection() {
-
-        try {
-
-            String user = AES256Decrypt.decrypt(
-                properties.getUser(),
-                properties.getKey()
-            );
-
-            String pass = AES256Decrypt.decrypt(
-                properties.getPassword(),
-                properties.getKey()
-            );
-
-            return new AS400(
-                properties.getHost(),
-                user,
-                pass
-            );
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error desencriptando credenciales AS400", e);
-        }
-    }
+{
+  "terminal": "BRT10701",
+  "cajero": "1038",
+  "codTrn": "0011",
+  "monedaTrn": "0",
+  "cuenta": "0001620000871",
+  "montoEfectivo": "0000000010.00",
+  "montoCheques": "0000000015.00",
+  "totalTrn": "0000000025.00",
+  "refe1": "00000000",
+  "refe2": "00000000",
+  "descr1": "0809199500427",
+  "descr2": "0809199500427",
+  "descr3": "0809199500427",
+  "descr4": "0809199500427",
+  "descr5": "0809199500427",
+  "descr6": "0809199500427",
+  "dqCodeW": "77"
 }
