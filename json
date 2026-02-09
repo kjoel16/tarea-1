@@ -1,1 +1,13 @@
-https://play.google.com/store/apps/details?id=com.davivienda.daviviendaapp
+package com.mycompany.api.transaccions;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class API01Transaccions {
+
+    public static void main(String[] args) {
+        SpringApplication.run(API01Transaccions.class, args);
+    }
+
+}
