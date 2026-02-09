@@ -1,158 +1,60 @@
-package com.mycompany.api.transaccions.dto;
+package com.mycompany.api.transaccions.service;
 
-public class TransaccionDataDTO {
+import com.ibm.as400.access.*;
+import com.mycompany.api.transaccions.config.As400Properties;
+import com.mycompany.api.transaccions.dto.TransaccionDataDTO;
+import com.mycompany.api.transaccions.dto.TransaccionResultDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-    private String terminal;
-    private String cajero;
-    private String codTrn;
-    private String monedaTrn;
-    private String cuenta;
-    private String montoEfectivo;
-    private String montoCheques;
-    private String totalTrn;
-    private String refe1;
-    private String refe2;
-    private String descr1;
-    private String descr2;
-    private String descr3;
-    private String descr4;
-    private String descr5;
-    private String descr6;
-    private String dqCodeW;
+@Service
+public class TransaccionService {
 
-    public String getTerminal() {
-        return terminal;
-    }
+    @Autowired
+    private As400Properties props;
 
-    public void setTerminal(String terminal) {
-        this.terminal = terminal;
-    }
+    public TransaccionResultDTO ejecutar(TransaccionDataDTO dto) throws Exception {
 
-    public String getCajero() {
-        return cajero;
-    }
+        AS400 as400 = new AS400(
+                props.getHost(),
+                props.getUser(),
+                props.getPassword()
+        );
 
-    public void setCajero(String cajero) {
-        this.cajero = cajero;
-    }
+        ProgramParameter[] params = new ProgramParameter[18];
 
-    public String getCodTrn() {
-        return codTrn;
-    }
+        params[0] = new ProgramParameter(new AS400Text(10).toBytes(dto.getTerminal()));
+        params[1] = new ProgramParameter(new AS400Text(4).toBytes(dto.getCajero()));
+        params[2] = new ProgramParameter(new AS400Text(6).toBytes(dto.getCodTrn()));
+        params[3] = new ProgramParameter(new AS400Text(1).toBytes(dto.getMonedaTrn()));
+        params[4] = new ProgramParameter(new AS400Text(13).toBytes(dto.getCuenta()));
+        params[5] = new ProgramParameter(new AS400Text(14).toBytes(dto.getMontoEfectivo()));
+        params[6] = new ProgramParameter(new AS400Text(14).toBytes(dto.getMontoCheques()));
+        params[7] = new ProgramParameter(new AS400Text(14).toBytes(dto.getTotalTrn()));
+        params[8] = new ProgramParameter(new AS400Text(8).toBytes(dto.getRefe1()));
+        params[9] = new ProgramParameter(new AS400Text(8).toBytes(dto.getRefe2()));
+        params[10] = new ProgramParameter(new AS400Text(40).toBytes(dto.getDescr1()));
+        params[11] = new ProgramParameter(new AS400Text(40).toBytes(dto.getDescr2()));
+        params[12] = new ProgramParameter(new AS400Text(40).toBytes(dto.getDescr3()));
+        params[13] = new ProgramParameter(new AS400Text(40).toBytes(dto.getDescr4()));
+        params[14] = new ProgramParameter(new AS400Text(2).toBytes(dto.getDescr5()));
+        params[15] = new ProgramParameter(new AS400Text(4).toBytes(dto.getDescr6()));
+        params[16] = new ProgramParameter(5);  // COD ERROR salida
+        params[17] = new ProgramParameter(50); // DESC ERROR salida
 
-    public void setCodTrn(String codTrn) {
-        this.codTrn = codTrn;
-    }
+        ProgramCall program = new ProgramCall(as400);
+        program.setProgram("/QSYS.LIB/LJTELLER.LIB/JTLAB001.PGM", params);
 
-    public String getMonedaTrn() {
-        return monedaTrn;
-    }
+        if (!program.run()) {
+            throw new Exception("Error llamando programa AS400");
+        }
 
-    public void setMonedaTrn(String monedaTrn) {
-        this.monedaTrn = monedaTrn;
-    }
+        AS400Text textErr = new AS400Text(5);
+        AS400Text textDesc = new AS400Text(50);
 
-    public String getCuenta() {
-        return cuenta;
-    }
+        String codErr = (String) textErr.toObject(params[16].getOutputData());
+        String descErr = (String) textDesc.toObject(params[17].getOutputData());
 
-    public void setCuenta(String cuenta) {
-        this.cuenta = cuenta;
-    }
-
-    public String getMontoEfectivo() {
-        return montoEfectivo;
-    }
-
-    public void setMontoEfectivo(String montoEfectivo) {
-        this.montoEfectivo = montoEfectivo;
-    }
-
-    public String getMontoCheques() {
-        return montoCheques;
-    }
-
-    public void setMontoCheques(String montoCheques) {
-        this.montoCheques = montoCheques;
-    }
-
-    public String getTotalTrn() {
-        return totalTrn;
-    }
-
-    public void setTotalTrn(String totalTrn) {
-        this.totalTrn = totalTrn;
-    }
-
-    public String getRefe1() {
-        return refe1;
-    }
-
-    public void setRefe1(String refe1) {
-        this.refe1 = refe1;
-    }
-
-    public String getRefe2() {
-        return refe2;
-    }
-
-    public void setRefe2(String refe2) {
-        this.refe2 = refe2;
-    }
-
-    public String getDescr1() {
-        return descr1;
-    }
-
-    public void setDescr1(String descr1) {
-        this.descr1 = descr1;
-    }
-
-    public String getDescr2() {
-        return descr2;
-    }
-
-    public void setDescr2(String descr2) {
-        this.descr2 = descr2;
-    }
-
-    public String getDescr3() {
-        return descr3;
-    }
-
-    public void setDescr3(String descr3) {
-        this.descr3 = descr3;
-    }
-
-    public String getDescr4() {
-        return descr4;
-    }
-
-    public void setDescr4(String descr4) {
-        this.descr4 = descr4;
-    }
-
-    public String getDescr5() {
-        return descr5;
-    }
-
-    public void setDescr5(String descr5) {
-        this.descr5 = descr5;
-    }
-
-    public String getDescr6() {
-        return descr6;
-    }
-
-    public void setDescr6(String descr6) {
-        this.descr6 = descr6;
-    }
-
-    public String getDqCodeW() {
-        return dqCodeW;
-    }
-
-    public void setDqCodeW(String dqCodeW) {
-        this.dqCodeW = dqCodeW;
+        return new TransaccionResultDTO(codErr, descErr);
     }
 }
