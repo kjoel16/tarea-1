@@ -1,34 +1,74 @@
-package com.mycompany.api.transaccions.controller;
+package com.mycompany.api.transaccions.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mycompany.api.transaccions.dto.*;
-import com.mycompany.api.transaccions.service.TransaccionService;
+import com.ibm.as400.access.AS400;
+import com.ibm.as400.access.AS400Message;
+import com.ibm.as400.access.ProgramCall;
+import com.ibm.as400.access.ProgramParameter;
+import com.mycompany.api.transaccions.dto.TransaccionDataDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Service;
 
-@RestController
-@RequestMapping("/api/transaccion")
-public class TransaccionController {
+@Service
+public class TransaccionService {
 
     @Autowired
-    private TransaccionService service;
+    private As400ConnectionService as400ConnectionService;
 
-    @PostMapping
-    public ResponseDTO ejecutar(@RequestBody RequestDTO request) throws Exception {
+    public String ejecutarTransaccion(TransaccionDataDTO data) throws Exception {
 
-        TransaccionDataDTO data =
-                new ObjectMapper().convertValue(request.getData(), TransaccionDataDTO.class);
+        // 1️⃣ Obtener conexión al AS400
+        AS400 as400 = as400ConnectionService.getConnection();
 
-        TransaccionResultDTO result = service.ejecutar(data);
+        // 2️⃣ Definir programa RPG
+        ProgramCall program = new ProgramCall(as400);
+        program.setProgram("/QSYS.LIB/LJTELLER.LIB/JTLAB001.PGM");
 
-        HeaderResponseDTO header = new HeaderResponseDTO();
-        header.setCodigo(result.getCodErr());
-        header.setMensaje(result.getDescErr());
+        // 3️⃣ Crear parámetros (IMPORTANTE: tamaños deben coincidir con RPG)
+        ProgramParameter[] parametros = new ProgramParameter[] {
 
-        ResponseDTO response = new ResponseDTO();
-        response.setHeader(header);
-        response.setData(result);
+            new ProgramParameter(padRight(data.getTerminal(), 10).getBytes(), 10),
+            new ProgramParameter(padRight(data.getCajero(), 4).getBytes(), 4),
+            new ProgramParameter(padRight(data.getCodTrn(), 6).getBytes(), 6),
+            new ProgramParameter(padRight(data.getMonedaTrn(), 3).getBytes(), 3),
+            new ProgramParameter(padRight(data.getCuenta(), 20).getBytes(), 20),
+            new ProgramParameter(padRight(data.getMontoEfectivo(), 15).getBytes(), 15),
+            new ProgramParameter(padRight(data.getMontoCheques(), 15).getBytes(), 15),
+            new ProgramParameter(padRight(data.getTotalTrn(), 15).getBytes(), 15),
+            new ProgramParameter(padRight(data.getRefe1(), 20).getBytes(), 20),
+            new ProgramParameter(padRight(data.getRefe2(), 20).getBytes(), 20),
+            new ProgramParameter(padRight(data.getDescr1(), 30).getBytes(), 30),
+            new ProgramParameter(padRight(data.getDescr2(), 30).getBytes(), 30),
+            new ProgramParameter(padRight(data.getDescr3(), 30).getBytes(), 30),
+            new ProgramParameter(padRight(data.getDescr4(), 30).getBytes(), 30),
+            new ProgramParameter(padRight(data.getDescr5(), 30).getBytes(), 30),
+            new ProgramParameter(padRight(data.getDescr6(), 30).getBytes(), 30),
+            new ProgramParameter(padRight(data.getDqCodeW(), 10).getBytes(), 10)
+        };
 
-        return response;
+        program.setParameterList(parametros);
+
+        // 4️⃣ Ejecutar CALL
+        boolean ok = program.run();
+
+        // 5️⃣ Manejo de error RPG
+        if (!ok) {
+            AS400Message[] messages = program.getMessageList();
+
+            String error = "Error desconocido en RPG";
+
+            if (messages.length > 0) {
+                error = messages[0].getText();
+            }
+
+            throw new RuntimeException(error);
+        }
+
+        return "TRANSACCION OK";
+    }
+
+    // 6️⃣ Método para rellenar espacios tipo CHAR de AS400
+    private String padRight(String value, int length) {
+        if (value == null) value = "";
+        return String.format("%-" + length + "s", value);
     }
 }
