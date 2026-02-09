@@ -1,9 +1,3 @@
-if (!program.run()) {
-    AS400Message[] msgs = program.getMessageList();
-
-    for (AS400Message m : msgs) {
-        System.out.println("AS400 MSG: " + m.getText());
-    }
-
-    throw new Exception("Error llamando programa AS400");
-}
+System.out.println("HOST: " + props.getHost());
+System.out.println("USER: " + props.getUser());
+System.out.println("PASS: " + props.getPassword());
