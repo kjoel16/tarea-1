@@ -1,23 +1,8 @@
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
+String user = AES256Decrypt.decrypt(props.getUser(), props.getKey());
+String pass = AES256Decrypt.decrypt(props.getPassword(), props.getKey());
 
-public class AES256Decrypt {
-
-    public static String decrypt(String encrypted, String key) throws Exception {
-
-        byte[] keyBytes = key.getBytes("UTF-8");
-        byte[] keyFinal = new byte[32];
-
-        System.arraycopy(keyBytes, 0, keyFinal, 0, Math.min(keyBytes.length, 32));
-
-        SecretKeySpec secretKey = new SecretKeySpec(keyFinal, "AES");
-
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(Cipher.DECRYPT_MODE, secretKey);
-
-        byte[] decoded = Base64.getDecoder().decode(encrypted);
-
-        return new String(cipher.doFinal(decoded));
-    }
-}
+AS400 as400 = new AS400(
+    props.getHost(),
+    user,
+    pass
+);
