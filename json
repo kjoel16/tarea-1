@@ -1,14 +1,12 @@
-package com.tu.paquete.dto;
+@RestController
+@RequestMapping("/cuenta")
+public class ConsultaCuentaController {
 
-public class ConsultaCuentaRequestDTO {
+    @Autowired
+    private ConsultaCuentaService service;
 
-    private String cuenta;
-
-    public String getCuenta() {
-        return cuenta;
-    }
-
-    public void setCuenta(String cuenta) {
-        this.cuenta = cuenta;
+    @PostMapping("/consultar")
+    public ConsultaCuentaDataDTO consultar(@RequestBody ConsultaCuentaRequestDTO request) {
+        return service.consultarDatosCliente(request);
     }
 }
