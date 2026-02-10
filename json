@@ -1,58 +1,59 @@
-package com.tu.paquete.service;
+package com.tu.paquete.dto;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+public class ConsultaCuentaDataDTO {
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.Types;
+    private String dmstat;
+    private String cunbr;
+    private String cuna1;
+    private String telefono;
+    private String identidad;
+    private String email;
 
-import com.tu.paquete.connection.As400ConnectionService;
-import com.tu.paquete.dto.ConsultaCuentaDataDTO;
-
-@Service
-public class ConsultaCuentaService {
-
-    @Autowired
-    private As400ConnectionService connectionService;
-
-    public ConsultaCuentaDataDTO consultarDatosCliente(String cuenta) {
-
-        ConsultaCuentaDataDTO dto = new ConsultaCuentaDataDTO();
-
-        String sql = "{CALL KJOELQDD.SP_DATOS_CLIENTE_CUENTA(?, ?, ?, ?, ?, ?, ?)}";
-
-        try (Connection conn = connectionService.getJdbcConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-
-            // IN
-            cs.setString(1, cuenta);
-
-            // OUT
-            cs.registerOutParameter(2, Types.CHAR);     
-            cs.registerOutParameter(3, Types.CHAR);     
-            cs.registerOutParameter(4, Types.VARCHAR);  
-            cs.registerOutParameter(5, Types.VARCHAR);  
-            cs.registerOutParameter(6, Types.VARCHAR);  
-            cs.registerOutParameter(7, Types.VARCHAR);  
-
-            cs.execute();
-
-            dto.setDmstat(safeTrim(cs.getString(2)));
-            dto.setCunbr(safeTrim(cs.getString(3)));
-            dto.setCuna1(cs.getString(4));
-            dto.setTelefono(cs.getString(5));
-            dto.setIdentidad(cs.getString(6));
-            dto.setEmail(cs.getString(7));
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error ejecutando SP_DATOS_CLIENTE_CUENTA", e);
-        }
-
-        return dto;
+    public String getDmstat() {
+        return dmstat;
     }
 
-    private String safeTrim(String value) {
-        return value == null ? null : value.trim();
+    public void setDmstat(String dmstat) {
+        this.dmstat = dmstat;
+    }
+
+    public String getCunbr() {
+        return cunbr;
+    }
+
+    public void setCunbr(String cunbr) {
+        this.cunbr = cunbr;
+    }
+
+    public String getCuna1() {
+        return cuna1;
+    }
+
+    public void setCuna1(String cuna1) {
+        this.cuna1 = cuna1;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public String getIdentidad() {
+        return identidad;
+    }
+
+    public void setIdentidad(String identidad) {
+        this.identidad = identidad;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }
