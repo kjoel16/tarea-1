@@ -1,50 +1,58 @@
-package com.tu.paquete.connection;
+package com.tu.paquete.service;
 
-import com.ibm.as400.access.AS400;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.Types;
+
+import com.tu.paquete.connection.As400ConnectionService;
+import com.tu.paquete.dto.ConsultaCuentaDataDTO;
 
 @Service
-public class As400ConnectionService {
+public class ConsultaCuentaService {
 
     @Autowired
-    private AS400Properties properties;
+    private As400ConnectionService connectionService;
 
-    // 🔵 TU MÉTODO ACTUAL (NO TOCAR)
-    public AS400 getAs400() {
+    public ConsultaCuentaDataDTO consultarDatosCliente(String cuenta) {
 
-        try {
-            AS400 as400 = new AS400(
-                    properties.getHost(),
-                    properties.getUser(),
-                    properties.getPassword()
-            );
+        ConsultaCuentaDataDTO dto = new ConsultaCuentaDataDTO();
 
-            as400.connectService(AS400.COMMAND);
+        String sql = "{CALL KJOELQDD.SP_DATOS_CLIENTE_CUENTA(?, ?, ?, ?, ?, ?, ?)}";
 
-            System.out.println("Conexion exitosa al AS400");
+        try (Connection conn = connectionService.getJdbcConnection();
+             CallableStatement cs = conn.prepareCall(sql)) {
 
-            return as400;
+            // IN
+            cs.setString(1, cuenta);
+
+            // OUT
+            cs.registerOutParameter(2, Types.CHAR);     
+            cs.registerOutParameter(3, Types.CHAR);     
+            cs.registerOutParameter(4, Types.VARCHAR);  
+            cs.registerOutParameter(5, Types.VARCHAR);  
+            cs.registerOutParameter(6, Types.VARCHAR);  
+            cs.registerOutParameter(7, Types.VARCHAR);  
+
+            cs.execute();
+
+            dto.setDmstat(safeTrim(cs.getString(2)));
+            dto.setCunbr(safeTrim(cs.getString(3)));
+            dto.setCuna1(cs.getString(4));
+            dto.setTelefono(cs.getString(5));
+            dto.setIdentidad(cs.getString(6));
+            dto.setEmail(cs.getString(7));
 
         } catch (Exception e) {
-            throw new RuntimeException("Error conectando al AS400", e);
+            throw new RuntimeException("Error ejecutando SP_DATOS_CLIENTE_CUENTA", e);
         }
+
+        return dto;
     }
 
-    // 🟢 MÉTODO NUEVO PARA SP (EL IMPORTANTE)
-    public Connection getJdbcConnection() throws Exception {
-
-        String url = "jdbc:as400://" + properties.getHost()
-                + ";naming=system"
-                + ";libraries=KJOELQDD";
-
-        return DriverManager.getConnection(
-                url,
-                properties.getUser(),
-                properties.getPassword()
-        );
+    private String safeTrim(String value) {
+        return value == null ? null : value.trim();
     }
 }
