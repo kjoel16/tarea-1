@@ -1,12 +1,34 @@
 @RestController
-@RequestMapping("/cuenta")
+@RequestMapping("/api/transaccion")
 public class ConsultaCuentaController {
 
     @Autowired
     private ConsultaCuentaService service;
 
-    @PostMapping("/consultar")
-    public ConsultaCuentaDataDTO consultar(@RequestBody ConsultaCuentaRequestDTO request) {
-        return service.consultarDatosCliente(request);
+    @PostMapping
+    public ResponseDTO ejecutar(@RequestBody RequestDTO request) throws Exception {
+
+        // Convertir SOLO el data del request
+        ConsultaCuentaDataDTO data =
+                new ObjectMapper().convertValue(
+                        request.getData(),
+                        ConsultaCuentaDataDTO.class
+                );
+
+        ConsultaCuentaResultDTO result =
+                service.consultarDatosCliente(data);
+
+        String guid = UUID.randomUUID().toString();
+
+        HeaderResponseDTO header = new HeaderResponseDTO();
+        header.setCodigo(result.getCodErr());
+        header.setMensaje(result.getDescErr());
+        header.setGuidRes(guid);
+
+        ResponseDTO response = new ResponseDTO();
+        response.setHeader(header);
+        response.setData(result);
+
+        return response;
     }
 }
