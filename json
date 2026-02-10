@@ -1,59 +1,14 @@
 package com.tu.paquete.dto;
 
-public class ConsultaCuentaDataDTO {
+public class ConsultaCuentaRequestDTO {
 
-    private String dmstat;
-    private String cunbr;
-    private String cuna1;
-    private String telefono;
-    private String identidad;
-    private String email;
+    private String cuenta;
 
-    public String getDmstat() {
-        return dmstat;
+    public String getCuenta() {
+        return cuenta;
     }
 
-    public void setDmstat(String dmstat) {
-        this.dmstat = dmstat;
-    }
-
-    public String getCunbr() {
-        return cunbr;
-    }
-
-    public void setCunbr(String cunbr) {
-        this.cunbr = cunbr;
-    }
-
-    public String getCuna1() {
-        return cuna1;
-    }
-
-    public void setCuna1(String cuna1) {
-        this.cuna1 = cuna1;
-    }
-
-    public String getTelefono() {
-        return telefono;
-    }
-
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
-    }
-
-    public String getIdentidad() {
-        return identidad;
-    }
-
-    public void setIdentidad(String identidad) {
-        this.identidad = identidad;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
+    public void setCuenta(String cuenta) {
+        this.cuenta = cuenta;
     }
 }
