@@ -1,5 +1,14 @@
-import java.util.UUID;
+CREATE OR REPLACE PROCEDURE TDIAZQDD.SP_CONSULTAR_CUENTA (
+    IN P_CUENTA CHAR(20)
+)
+LANGUAGE SQL
+BEGIN
 
-String guid = UUID.randomUUID().toString();
+    SELECT TNOMBRE,
+           TSALDO,
+           TESTADO,
+           TTIPO
+    FROM TDIAZQDD.TAP002
+    WHERE TRIM(TACCNT) = TRIM(P_CUENTA);
 
-System.out.println(guid);
+END
