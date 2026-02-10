@@ -1,35 +1,44 @@
-package com.demo.apias400.as400;
+@Service
+public class ConsultaCuentaService {
 
-import com.ibm.as400.access.*;
+    @Autowired
+    private As400ConnectionService connectionService;
 
-public class As400Client {
+    public ConsultaCuentaResultDTO consultarDatosCliente(ConsultaCuentaDataDTO request) {
 
-    private final String host = "IP_AS400";
-    private final String user = "USUARIO";
-    private final String password = "PASSWORD";
+        ConsultaCuentaResultDTO result = new ConsultaCuentaResultDTO();
 
-    public String llamarPrograma(String cuenta) throws Exception {
+        String sql = "{CALL KJOELQDD.SP_DATOS_CLIENTE_CUENTA(?, ?, ?, ?, ?, ?, ?)}";
 
-        AS400 as400 = new AS400(host, user, password);
+        try (Connection conn = connectionService.getJdbcConnection();
+             CallableStatement cs = conn.prepareCall(sql)) {
 
-        ProgramCall programCall = new ProgramCall(as400);
+            cs.setString(1, request.getCuenta());
 
-        ProgramParameter[] params = new ProgramParameter[1];
+            cs.registerOutParameter(2, Types.CHAR);
+            cs.registerOutParameter(3, Types.CHAR);
+            cs.registerOutParameter(4, Types.VARCHAR);
+            cs.registerOutParameter(5, Types.VARCHAR);
+            cs.registerOutParameter(6, Types.VARCHAR);
+            cs.registerOutParameter(7, Types.VARCHAR);
 
-        // Parámetro de entrada (ej: cuenta 10 posiciones)
-        AS400Text text = new AS400Text(10, as400);
-        params[0] = new ProgramParameter(text.toBytes(cuenta));
+            cs.execute();
 
-        programCall.setProgram(
-            "/QSYS.LIB/BIBLIOTECA.LIB/PROGRAMA.PGM",
-            params
-        );
+            result.setDmstat(cs.getString(2).trim());
+            result.setCunbr(cs.getString(3).trim());
+            result.setCuna1(cs.getString(4));
+            result.setTelefono(cs.getString(5));
+            result.setIdentidad(cs.getString(6));
+            result.setEmail(cs.getString(7));
 
-        if (!programCall.run()) {
-            throw new RuntimeException("Error ejecutando programa AS400");
+            result.setCodErr("0000");
+            result.setDescErr("OK");
+
+        } catch (Exception e) {
+            result.setCodErr("9999");
+            result.setDescErr("ERROR AL CONSULTAR CUENTA");
         }
 
-        // Simulación de respuesta por ahora
-        return "OK";
+        return result;
     }
 }
