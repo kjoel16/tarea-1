@@ -1,28 +1,81 @@
-{
-  "header": {
-    "canal": "CAJA",
-    "usuario": "TESTUSR",
-    "terminal": "TERM001",
-    "fecha": "20260208",
-    "hora": "214500"
-  },
-  "data": {
-    "terminal": "TERM001",
-    "cajero": "0001",
-    "codTrn": "TR0001",
-    "monedaTrn": "L",
-    "cuenta": "1234567890123",
-    "montoEfectivo": "00000001000000",
-    "montoCheques": "00000000000000",
-    "totalTrn": "00000001000000",
-    "refe1": "REF00001",
-    "refe2": "REF00002",
-    "descr1": "DEPOSITO EN EFECTIVO",
-    "descr2": "CAJA PRINCIPAL",
-    "descr3": "CLIENTE BANCA",
-    "descr4": "OPERACION NORMAL",
-    "descr5": "01",
-    "descr6": "0001",
-    "dqCodeW": "00001"
-  }
+package com.mycompany.api.consulta.config;
+
+import com.ibm.as400.access.AS400;
+import com.ibm.as400.access.AS400SecurityException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+
+@Service
+public class As400ConnectionService {
+
+    @Autowired
+    private As400Properties properties;
+
+    public AS400 getAs400() {
+
+        try {
+            System.out.println("Intentando conectar al AS400...");
+            System.out.println("Host: " + properties.getHost());
+            System.out.println("User: " + properties.getUser());
+
+            AS400 as400 = new AS400(
+                    properties.getHost(),
+                    properties.getUser(),
+                    properties.getPassword()
+            );
+
+            as400.connectService(AS400.COMMAND);
+
+            System.out.println("✅ Conexion exitosa al AS400");
+
+            return as400;
+
+        } catch (AS400SecurityException e) {
+            System.out.println("❌ ERROR DE SEGURIDAD");
+            System.out.println("Usuario o password incorrectos");
+            e.printStackTrace();
+            throw new RuntimeException(e);
+
+        } catch (IOException e) {
+            System.out.println("❌ ERROR DE RED");
+            System.out.println("No se puede llegar al AS400 (VPN, firewall, IP)");
+            e.printStackTrace();
+            throw new RuntimeException(e);
+
+        } catch (Exception e) {
+            System.out.println("❌ ERROR GENERAL CONECTANDO AL AS400");
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Connection getJdbcConnection() {
+
+        try {
+            String url = "jdbc:as400://" + properties.getHost()
+                    + ";naming=system;libraries=KJOELQDD";
+
+            System.out.println("Intentando conexion JDBC...");
+            System.out.println("URL: " + url);
+
+            Connection conn = DriverManager.getConnection(
+                    url,
+                    properties.getUser(),
+                    properties.getPassword()
+            );
+
+            System.out.println("✅ Conexion JDBC exitosa");
+
+            return conn;
+
+        } catch (Exception e) {
+            System.out.println("❌ ERROR EN CONEXION JDBC");
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 }
