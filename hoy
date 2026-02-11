@@ -1,24 +1,84 @@
-public Connection getJdbcConnection() {
+package com.mycompany.api.consulta.service;
 
-    try {
+import com.ibm.as400.access.AS400JDBCDataSource;
+import com.mycompany.api.consulta.config.As400Properties;
+import com.mycompany.api.consulta.dto.dtosConsultaCuenta.ConsultaCuentaDataDTO;
+import com.mycompany.api.consulta.dto.dtosConsultaCuenta.ConsultaCuentaResultDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-        Class.forName("com.ibm.as400.access.AS400JDBCDriver");
+import java.math.BigDecimal;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.Types;
 
-        String url = "jdbc:as400://" + properties.getHost()
-                + ";naming=system;libraries=BCAH96";
+@Service
+public class ConsultaCuentaService {
 
-        Connection conn = DriverManager.getConnection(
-                url,
-                properties.getUser(),
-                properties.getPassword()
-        );
+    @Autowired
+    private As400Properties properties;
 
-        System.out.println("Conexion JDBC exitosa");
+    public ConsultaCuentaResultDTO consultarDatosCliente(ConsultaCuentaDataDTO request) {
 
-        return conn;
+        ConsultaCuentaResultDTO dto = new ConsultaCuentaResultDTO();
 
-    } catch (Exception e) {
-        e.printStackTrace();
-        throw new RuntimeException(e);
+        String sql = "{CALL BCAH96.SP_DATOS_CLIENTE_CUENTA(?, ?, ?, ?, ?, ?)}";
+
+        try (
+                Connection conn = getJdbcConnection();
+                CallableStatement cs = conn.prepareCall(sql)
+        ) {
+
+            System.out.println("Ejecutando SP_DATOS_CLIENTE_CUENTA...");
+
+            // PARAMETRO IN (NUMERIC)
+            cs.setBigDecimal(1, new BigDecimal(request.getCuenta()));
+
+            // PARAMETROS OUT
+            cs.registerOutParameter(2, Types.CHAR);      // CUNBR
+            cs.registerOutParameter(3, Types.VARCHAR);   // CUNA1
+            cs.registerOutParameter(4, Types.DECIMAL);   // CUCLPH
+            cs.registerOutParameter(5, Types.VARCHAR);   // CUNTID
+            cs.registerOutParameter(6, Types.VARCHAR);   // CUEMA1
+
+            cs.execute();
+
+            dto.setCunbr(safeTrim(cs.getString(2)));
+            dto.setCuna1(cs.getString(3));
+            dto.setTelefono(
+                    cs.getBigDecimal(4) != null
+                            ? cs.getBigDecimal(4).toPlainString()
+                            : null
+            );
+            dto.setIdentidad(cs.getString(5));
+            dto.setEmail(cs.getString(6));
+
+            dto.setCodErr("0000");
+            dto.setDescErr("OK");
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            dto.setCodErr("9999");
+            dto.setDescErr("ERROR EJECUTANDO SP");
+
+        }
+
+        return dto;
+    }
+
+    private Connection getJdbcConnection() throws Exception {
+
+        AS400JDBCDataSource ds = new AS400JDBCDataSource();
+        ds.setServerName(properties.getHost());
+        ds.setUser(properties.getUser());
+        ds.setPassword(properties.getPassword());
+
+        return ds.getConnection();
+    }
+
+    private String safeTrim(String value) {
+        return value == null ? null : value.trim();
     }
 }
