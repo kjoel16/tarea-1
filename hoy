@@ -1,44 +1,24 @@
-@Service
-public class ConsultaCuentaService {
+public Connection getJdbcConnection() {
 
-    @Autowired
-    private As400ConnectionService connectionService;
+    try {
 
-    public ConsultaCuentaResultDTO consultarDatosCliente(ConsultaCuentaDataDTO request) {
+        Class.forName("com.ibm.as400.access.AS400JDBCDriver");
 
-        ConsultaCuentaResultDTO result = new ConsultaCuentaResultDTO();
+        String url = "jdbc:as400://" + properties.getHost()
+                + ";naming=system;libraries=BCAH96";
 
-        String sql = "{CALL KJOELQDD.SP_DATOS_CLIENTE_CUENTA(?, ?, ?, ?, ?, ?, ?)}";
+        Connection conn = DriverManager.getConnection(
+                url,
+                properties.getUser(),
+                properties.getPassword()
+        );
 
-        try (Connection conn = connectionService.getJdbcConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
+        System.out.println("Conexion JDBC exitosa");
 
-            cs.setString(1, request.getCuenta());
+        return conn;
 
-            cs.registerOutParameter(2, Types.CHAR);
-            cs.registerOutParameter(3, Types.CHAR);
-            cs.registerOutParameter(4, Types.VARCHAR);
-            cs.registerOutParameter(5, Types.VARCHAR);
-            cs.registerOutParameter(6, Types.VARCHAR);
-            cs.registerOutParameter(7, Types.VARCHAR);
-
-            cs.execute();
-
-            result.setDmstat(cs.getString(2).trim());
-            result.setCunbr(cs.getString(3).trim());
-            result.setCuna1(cs.getString(4));
-            result.setTelefono(cs.getString(5));
-            result.setIdentidad(cs.getString(6));
-            result.setEmail(cs.getString(7));
-
-            result.setCodErr("0000");
-            result.setDescErr("OK");
-
-        } catch (Exception e) {
-            result.setCodErr("9999");
-            result.setDescErr("ERROR AL CONSULTAR CUENTA");
-        }
-
-        return result;
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new RuntimeException(e);
     }
 }
