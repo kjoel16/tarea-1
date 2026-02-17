@@ -1,81 +1,63 @@
-package com.mycompany.api.consulta.config;
+@startuml
+title Flujo completo - API Spring Boot + AS400 + Deploy en Linux con Nginx
 
-import com.ibm.as400.access.AS400;
-import com.ibm.as400.access.AS400SecurityException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+actor Developer
+participant "PC Desarrollo\n(Spring Boot)" as DEV
+participant "Windows Server\n(5.246)" as WIN
+participant "AS400" as AS400
+participant "Linux Server\n(5.148)" as LINUX
+participant "Nginx" as NGINX
+participant "Cliente HTTP" as CLIENT
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
+== Desarrollo y Debug ==
 
-@Service
-public class As400ConnectionService {
+Developer -> DEV : Crear API Spring Boot
+Developer -> DEV : Configurar conexión AS400
+Developer -> DEV : Crear DTOs y TransaccionService
+Developer -> DEV : Debug paso a paso
 
-    @Autowired
-    private As400Properties properties;
+DEV -> AS400 : ProgramCall(params[])
+AS400 --> DEV : Respuesta (codError, descError)
 
-    public AS400 getAs400() {
+Developer -> DEV : Validar parámetros PI RPG
+Developer -> DEV : Ajustar tamaños AS400Text
+Developer -> DEV : Confirmar conexión exitosa
 
-        try {
-            System.out.println("Intentando conectar al AS400...");
-            System.out.println("Host: " + properties.getHost());
-            System.out.println("User: " + properties.getUser());
+== Empaquetado ==
 
-            AS400 as400 = new AS400(
-                    properties.getHost(),
-                    properties.getUser(),
-                    properties.getPassword()
-            );
+Developer -> DEV : mvn clean package
+DEV -> DEV : Genera JAR (target/*.jar)
 
-            as400.connectService(AS400.COMMAND);
+Developer -> WIN : Copiar proyecto
+WIN -> WIN : Ejecutar JAR de prueba
+WIN -> AS400 : Llamar programa RPG
+AS400 --> WIN : Respuesta correcta
 
-            System.out.println("✅ Conexion exitosa al AS400");
+== Transferencia de JAR ==
 
-            return as400;
+Developer -> DEV : Descargar JAR a PC
+DEV -> LINUX : scp API.jar /opt/
 
-        } catch (AS400SecurityException e) {
-            System.out.println("❌ ERROR DE SEGURIDAD");
-            System.out.println("Usuario o password incorrectos");
-            e.printStackTrace();
-            throw new RuntimeException(e);
+== Despliegue en Linux ==
 
-        } catch (IOException e) {
-            System.out.println("❌ ERROR DE RED");
-            System.out.println("No se puede llegar al AS400 (VPN, firewall, IP)");
-            e.printStackTrace();
-            throw new RuntimeException(e);
+Developer -> LINUX : SSH login
+Developer -> LINUX : Instalar JDK 21
+Developer -> LINUX : Ejecutar\njava -jar API.jar &
 
-        } catch (Exception e) {
-            System.out.println("❌ ERROR GENERAL CONECTANDO AL AS400");
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
+LINUX -> LINUX : API corre en puerto 8080
 
-    public Connection getJdbcConnection() {
+== Configuración Nginx ==
 
-        try {
-            String url = "jdbc:as400://" + properties.getHost()
-                    + ";naming=system;libraries=KJOELQDD";
+Developer -> NGINX : Configurar reverse proxy
+NGINX -> LINUX : Redirigir a localhost:8080
 
-            System.out.println("Intentando conexion JDBC...");
-            System.out.println("URL: " + url);
+== Consumo final ==
 
-            Connection conn = DriverManager.getConnection(
-                    url,
-                    properties.getUser(),
-                    properties.getPassword()
-            );
+CLIENT -> NGINX : HTTP Request
+NGINX -> LINUX : Forward request
+LINUX -> AS400 : ProgramCall(params)
+AS400 --> LINUX : Respuesta
+LINUX --> NGINX : JSON Response
+NGINX --> CLIENT : JSON Response
 
-            System.out.println("✅ Conexion JDBC exitosa");
-
-            return conn;
-
-        } catch (Exception e) {
-            System.out.println("❌ ERROR EN CONEXION JDBC");
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-}
+@enduml
