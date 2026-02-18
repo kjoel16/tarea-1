@@ -1,53 +1,68 @@
-package com.mycompany.logwriter.config;
+package com.mycompany.logwriter;
 
-import com.mycompany.logwriter.interceptor.LogInterceptor;
-import jakarta.servlet.Filter;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+public class LogWriterLib {
 
-@Configuration
-public class LogAutoConfiguration implements WebMvcConfigurer {
+    public static synchronized void log(
+            String project,
+            String controller,
+            String method,
+            String endpoint,
+            String ip,
+            String requestBody,
+            String responseBody,
+            int status,
+            long timeMs
+    ) {
+        try {
 
-    /**
-     * Registra automáticamente el interceptor que captura:
-     * - endpoint
-     * - método
-     * - IP
-     * - tiempos
-     * - status
-     * y luego delega a LogWriterLib
-     */
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(logInterceptor())
-                .addPathPatterns("/**"); // intercepta TODO
-    }
+            LocalDateTime now = LocalDateTime.now();
 
-    @Bean
-    @ConditionalOnMissingBean
-    public LogInterceptor logInterceptor() {
-        return new LogInterceptor();
-    }
+            String date = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String hour = now.format(DateTimeFormatter.ofPattern("HH"));
+            String fullTime = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-    /**
-     * Filtro que envuelve request/response para poder leer
-     * el JSON completo (entrada y salida) usando
-     * ContentCachingRequestWrapper / ResponseWrapper.
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public FilterRegistrationBean<Filter> cachingFilter() {
-        FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
-        bean.setFilter(new CachingFilter());
-        bean.addUrlPatterns("/*");
-        bean.setName("log-writer-caching-filter");
-        bean.setOrder(Ordered.HIGHEST_PRECEDENCE); // primero en la cadena
-        return bean;
+            String basePath =
+                    "logs/" +
+                    project + "/" +
+                    controller + "/" +
+                    date + "/";
+
+            Files.createDirectories(Paths.get(basePath));
+
+            String filePath = basePath + "log-" + hour + ".txt";
+
+            BufferedWriter writer = new BufferedWriter(
+                    new FileWriter(filePath, true)
+            );
+
+            writer.write("============================================================\n");
+            writer.write("INICIO: " + fullTime + "\n");
+            writer.write("Controller: " + controller + "\n");
+            writer.write("Metodo: " + method + "\n");
+            writer.write("Endpoint: " + endpoint + "\n");
+            writer.write("IP: " + ip + "\n");
+            writer.write("Tiempo: " + timeMs + " ms\n");
+            writer.write("Status: " + status + "\n");
+
+            writer.write("\n----- REQUEST JSON -----\n");
+            writer.write(requestBody + "\n");
+
+            writer.write("\n----- RESPONSE JSON -----\n");
+            writer.write(responseBody + "\n");
+
+            writer.write("============================================================\n\n");
+
+            writer.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
