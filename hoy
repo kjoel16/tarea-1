@@ -1,47 +1,16 @@
-package com.mycompany.logwriter.interceptor;
+package com.mycompany.logwriter.config;
 
-import com.mycompany.logwriter.LogWriterLib;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.springframework.web.servlet.HandlerInterceptor;
+import com.mycompany.logwriter.interceptor.LogInterceptor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-public class LogInterceptor implements HandlerInterceptor {
-
-    private static final String START = "startTime";
-
-    @Override
-    public boolean preHandle(HttpServletRequest request,
-                             HttpServletResponse response,
-                             Object handler) {
-
-        request.setAttribute(START, System.currentTimeMillis());
-        return true;
-    }
+@Configuration
+public class LogAutoConfiguration implements WebMvcConfigurer {
 
     @Override
-    public void afterCompletion(HttpServletRequest request,
-                                HttpServletResponse response,
-                                Object handler,
-                                Exception ex) {
-
-        long start = (long) request.getAttribute(START);
-        long timeMs = System.currentTimeMillis() - start;
-
-        String project = System.getProperty("spring.application.name", "unknown-project");
-        String controller = handler.getClass().getSimpleName();
-        String method = request.getMethod();
-        String endpoint = request.getRequestURI();
-        String ip = request.getRemoteAddr();
-        int status = response.getStatus();
-
-        LogWriterLib.log(
-                project,
-                controller,
-                method,
-                endpoint,
-                ip,
-                status,
-                timeMs
-        );
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LogInterceptor())
+                .addPathPatterns("/**");
     }
 }
