@@ -1,31 +1,56 @@
-package com.mycompany.logwriter.config;
+package com.mycompany.logwriter.interceptor;
 
-import org.springframework.stereotype.Component;
+import com.mycompany.logwriter.LogWriterLib;
+import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
-import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
-@Component
-public class CachingFilter implements Filter {
+public class LogInterceptor implements HandlerInterceptor {
+
+    private static final String START = "startTime";
 
     @Override
-    public void doFilter(ServletRequest request,
-                         ServletResponse response,
-                         FilterChain chain)
-            throws IOException, ServletException {
+    public boolean preHandle(HttpServletRequest request,
+                             HttpServletResponse response,
+                             Object handler) {
 
-        ContentCachingRequestWrapper requestWrapper =
-                new ContentCachingRequestWrapper((HttpServletRequest) request);
+        request.setAttribute(START, System.currentTimeMillis());
+        return true;
+    }
 
-        ContentCachingResponseWrapper responseWrapper =
-                new ContentCachingResponseWrapper((HttpServletResponse) response);
+    @Override
+    public void afterCompletion(HttpServletRequest request,
+                                HttpServletResponse response,
+                                Object handler,
+                                Exception ex) {
 
-        chain.doFilter(requestWrapper, responseWrapper);
+        long start = (long) request.getAttribute(START);
+        long timeMs = System.currentTimeMillis() - start;
 
-        responseWrapper.copyBodyToResponse();
+        String requestBody = "";
+        String responseBody = "";
+
+        if (request instanceof ContentCachingRequestWrapper wrapper) {
+            byte[] buf = wrapper.getContentAsByteArray();
+            requestBody = new String(buf, StandardCharsets.UTF_8);
+        }
+
+        if (response instanceof ContentCachingResponseWrapper wrapper) {
+            byte[] buf = wrapper.getContentAsByteArray();
+            responseBody = new String(buf, StandardCharsets.UTF_8);
+        }
+
+        LogWriterLib.log(
+                request.getRequestURI(),
+                request.getMethod(),
+                requestBody,
+                responseBody,
+                response.getStatus(),
+                timeMs
+        );
     }
 }
