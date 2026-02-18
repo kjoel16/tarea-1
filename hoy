@@ -1,55 +1,29 @@
-package com.mycompany.logwriter.interceptor;
+package com.mycompany.logwriter.config;
 
-import com.mycompany.logwriter.LogWriterLib;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
-public class LogInterceptor implements HandlerInterceptor {
+import java.io.IOException;
 
-    private static final String START = "startTime";
-
-    @Override
-    public boolean preHandle(HttpServletRequest request,
-                             HttpServletResponse response,
-                             Object handler) {
-
-        request.setAttribute(START, System.currentTimeMillis());
-        return true;
-    }
+public class CachingFilter implements Filter {
 
     @Override
-    public void afterCompletion(HttpServletRequest request,
-                                HttpServletResponse response,
-                                Object handler,
-                                Exception ex) throws Exception {
+    public void doFilter(ServletRequest request,
+                         ServletResponse response,
+                         FilterChain chain)
+            throws IOException, ServletException {
 
-        long start = (long) request.getAttribute(START);
-        long time = System.currentTimeMillis() - start;
+        ContentCachingRequestWrapper req =
+                new ContentCachingRequestWrapper((HttpServletRequest) request);
 
-        String requestBody = "";
-        String responseBody = "";
+        ContentCachingResponseWrapper res =
+                new ContentCachingResponseWrapper((HttpServletResponse) response);
 
-        if (request instanceof ContentCachingRequestWrapper wrapper) {
-            requestBody = new String(wrapper.getContentAsByteArray());
-        }
+        chain.doFilter(req, res);
 
-        if (response instanceof ContentCachingResponseWrapper wrapper) {
-            responseBody = new String(wrapper.getContentAsByteArray());
-        }
-
-        LogWriterLib.log(
-                "API-02-Consulta",
-                request.getRequestURI().split("/")[2],
-                request.getMethod(),
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                requestBody,
-                responseBody,
-                response.getStatus(),
-                time
-        );
+        res.copyBodyToResponse();
     }
 }
