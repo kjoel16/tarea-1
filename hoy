@@ -1,80 +1,55 @@
-package com.mycompany.logwriter;
+package com.mycompany.logwriter.interceptor;
 
-import java.io.*;
-import java.nio.file.*;
-import java.time.*;
-import java.time.format.DateTimeFormatter;
+import com.mycompany.logwriter.LogWriterLib;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
-public class LogWriterLib {
+public class LogInterceptor implements HandlerInterceptor {
 
-    public static synchronized void log(
-            String project,
-            String controller,
-            String method,
-            String endpoint,
-            String ip,
-            String requestBody,
-            String responseBody,
-            int status,
-            long timeMs
-    ) {
-        try {
-            LocalDateTime now = LocalDateTime.now();
+    private static final String START = "startTime";
 
-            String date = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String hour = now.format(DateTimeFormatter.ofPattern("HH"));
+    @Override
+    public boolean preHandle(HttpServletRequest request,
+                             HttpServletResponse response,
+                             Object handler) {
 
-            String basePath = "logs/"
-                    + project + "/"
-                    + controller + "/"
-                    + date + "/";
+        request.setAttribute(START, System.currentTimeMillis());
+        return true;
+    }
 
-            Files.createDirectories(Paths.get(basePath));
+    @Override
+    public void afterCompletion(HttpServletRequest request,
+                                HttpServletResponse response,
+                                Object handler,
+                                Exception ex) throws Exception {
 
-            String filePath = basePath + "log-" + hour + ".txt";
+        long start = (long) request.getAttribute(START);
+        long time = System.currentTimeMillis() - start;
 
-            BufferedWriter writer = new BufferedWriter(
-                    new FileWriter(filePath, true)
-            );
+        String requestBody = "";
+        String responseBody = "";
 
-            writer.write("----------------------------------------------------");
-            writer.newLine();
-
-            writer.write("Fecha: " + now);
-            writer.newLine();
-
-            writer.write("IP: " + ip);
-            writer.newLine();
-
-            writer.write("Metodo: " + method);
-            writer.newLine();
-
-            writer.write("URL: " + endpoint);
-            writer.newLine();
-
-            writer.write("Status: " + status);
-            writer.newLine();
-
-            writer.write("Tiempo: " + timeMs + " ms");
-            writer.newLine();
-
-            writer.newLine();
-            writer.write("----- REQUEST JSON -----");
-            writer.newLine();
-            writer.write(requestBody != null ? requestBody : "SIN BODY");
-            writer.newLine();
-
-            writer.newLine();
-            writer.write("----- RESPONSE JSON -----");
-            writer.newLine();
-            writer.write(responseBody != null ? responseBody : "SIN RESPONSE");
-            writer.newLine();
-
-            writer.newLine();
-            writer.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (request instanceof ContentCachingRequestWrapper wrapper) {
+            requestBody = new String(wrapper.getContentAsByteArray());
         }
+
+        if (response instanceof ContentCachingResponseWrapper wrapper) {
+            responseBody = new String(wrapper.getContentAsByteArray());
+        }
+
+        LogWriterLib.log(
+                "API-02-Consulta",
+                request.getRequestURI().split("/")[2],
+                request.getMethod(),
+                request.getRequestURI(),
+                request.getRemoteAddr(),
+                requestBody,
+                responseBody,
+                response.getStatus(),
+                time
+        );
     }
 }
