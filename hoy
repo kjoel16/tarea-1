@@ -1,59 +1,47 @@
-package com.mycompany.logwriter;
+package com.mycompany.logwriter.interceptor;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import com.mycompany.logwriter.LogWriterLib;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerInterceptor;
 
-public class LogWriterLib {
+public class LogInterceptor implements HandlerInterceptor {
 
-    public static synchronized void log(
-            String project,
-            String controller,
-            String method,
-            String endpoint,
-            String ip,
-            int status,
-            long timeMs
-    ) {
+    private static final String START = "startTime";
 
-        try {
+    @Override
+    public boolean preHandle(HttpServletRequest request,
+                             HttpServletResponse response,
+                             Object handler) {
 
-            LocalDateTime now = LocalDateTime.now();
+        request.setAttribute(START, System.currentTimeMillis());
+        return true;
+    }
 
-            String date = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String hour = now.format(DateTimeFormatter.ofPattern("HH"));
+    @Override
+    public void afterCompletion(HttpServletRequest request,
+                                HttpServletResponse response,
+                                Object handler,
+                                Exception ex) {
 
-            String basePath = "logs/"
-                    + project + "/"
-                    + controller + "/"
-                    + date + "/";
+        long start = (long) request.getAttribute(START);
+        long timeMs = System.currentTimeMillis() - start;
 
-            Files.createDirectories(Paths.get(basePath));
+        String project = System.getProperty("spring.application.name", "unknown-project");
+        String controller = handler.getClass().getSimpleName();
+        String method = request.getMethod();
+        String endpoint = request.getRequestURI();
+        String ip = request.getRemoteAddr();
+        int status = response.getStatus();
 
-            String filePath = basePath + "log-" + hour + ".txt";
-
-            BufferedWriter writer = new BufferedWriter(
-                    new FileWriter(filePath, true)
-            );
-
-            writer.write("--------------------------------------------------\n");
-            writer.write("Fecha: " + now + "\n");
-            writer.write("Proyecto: " + project + "\n");
-            writer.write("Controlador: " + controller + "\n");
-            writer.write("Metodo HTTP: " + method + "\n");
-            writer.write("Endpoint: " + endpoint + "\n");
-            writer.write("IP: " + ip + "\n");
-            writer.write("Status: " + status + "\n");
-            writer.write("Tiempo ms: " + timeMs + "\n");
-            writer.write("--------------------------------------------------\n\n");
-
-            writer.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        LogWriterLib.log(
+                project,
+                controller,
+                method,
+                endpoint,
+                ip,
+                status,
+                timeMs
+        );
     }
 }
