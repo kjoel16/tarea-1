@@ -1,15 +1,80 @@
-package com.mycompany.logwriter.config;
+package com.mycompany.logwriter;
 
-import com.mycompany.logwriter.interceptor.LogInterceptor;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.*;
+import java.io.*;
+import java.nio.file.*;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 
-@Configuration
-public class LogAutoConfiguration implements WebMvcConfigurer {
+public class LogWriterLib {
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LogInterceptor())
-                .addPathPatterns("/**");
+    public static synchronized void log(
+            String project,
+            String controller,
+            String method,
+            String endpoint,
+            String ip,
+            String requestBody,
+            String responseBody,
+            int status,
+            long timeMs
+    ) {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+
+            String date = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String hour = now.format(DateTimeFormatter.ofPattern("HH"));
+
+            String basePath = "logs/"
+                    + project + "/"
+                    + controller + "/"
+                    + date + "/";
+
+            Files.createDirectories(Paths.get(basePath));
+
+            String filePath = basePath + "log-" + hour + ".txt";
+
+            BufferedWriter writer = new BufferedWriter(
+                    new FileWriter(filePath, true)
+            );
+
+            writer.write("----------------------------------------------------");
+            writer.newLine();
+
+            writer.write("Fecha: " + now);
+            writer.newLine();
+
+            writer.write("IP: " + ip);
+            writer.newLine();
+
+            writer.write("Metodo: " + method);
+            writer.newLine();
+
+            writer.write("URL: " + endpoint);
+            writer.newLine();
+
+            writer.write("Status: " + status);
+            writer.newLine();
+
+            writer.write("Tiempo: " + timeMs + " ms");
+            writer.newLine();
+
+            writer.newLine();
+            writer.write("----- REQUEST JSON -----");
+            writer.newLine();
+            writer.write(requestBody != null ? requestBody : "SIN BODY");
+            writer.newLine();
+
+            writer.newLine();
+            writer.write("----- RESPONSE JSON -----");
+            writer.newLine();
+            writer.write(responseBody != null ? responseBody : "SIN RESPONSE");
+            writer.newLine();
+
+            writer.newLine();
+            writer.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
