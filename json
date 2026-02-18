@@ -1,34 +1,20 @@
-@RestController
-@RequestMapping("/api/transaccion")
-public class ConsultaCuentaController {
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    @Autowired
-    private ConsultaCuentaService service;
+    <modelVersion>4.0.0</modelVersion>
 
-    @PostMapping
-    public ResponseDTO ejecutar(@RequestBody RequestDTO request) throws Exception {
+    <groupId>com.mycompany</groupId>
+    <artifactId>log-writer-lib</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
-        // Convertir SOLO el data del request
-        ConsultaCuentaDataDTO data =
-                new ObjectMapper().convertValue(
-                        request.getData(),
-                        ConsultaCuentaDataDTO.class
-                );
+    <name>log-writer-lib</name>
 
-        ConsultaCuentaResultDTO result =
-                service.consultarDatosCliente(data);
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+    </properties>
 
-        String guid = UUID.randomUUID().toString();
-
-        HeaderResponseDTO header = new HeaderResponseDTO();
-        header.setCodigo(result.getCodErr());
-        header.setMensaje(result.getDescErr());
-        header.setGuidRes(guid);
-
-        ResponseDTO response = new ResponseDTO();
-        response.setHeader(header);
-        response.setData(result);
-
-        return response;
-    }
-}
+</project>
