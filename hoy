@@ -1,29 +1,53 @@
 package com.mycompany.logwriter.config;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.util.ContentCachingRequestWrapper;
-import org.springframework.web.util.ContentCachingResponseWrapper;
+import com.mycompany.logwriter.interceptor.LogInterceptor;
+import jakarta.servlet.Filter;
 
-import java.io.IOException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-public class CachingFilter implements Filter {
+@Configuration
+public class LogAutoConfiguration implements WebMvcConfigurer {
 
+    /**
+     * Registra automáticamente el interceptor que captura:
+     * - endpoint
+     * - método
+     * - IP
+     * - tiempos
+     * - status
+     * y luego delega a LogWriterLib
+     */
     @Override
-    public void doFilter(ServletRequest request,
-                         ServletResponse response,
-                         FilterChain chain)
-            throws IOException, ServletException {
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(logInterceptor())
+                .addPathPatterns("/**"); // intercepta TODO
+    }
 
-        ContentCachingRequestWrapper req =
-                new ContentCachingRequestWrapper((HttpServletRequest) request);
+    @Bean
+    @ConditionalOnMissingBean
+    public LogInterceptor logInterceptor() {
+        return new LogInterceptor();
+    }
 
-        ContentCachingResponseWrapper res =
-                new ContentCachingResponseWrapper((HttpServletResponse) response);
-
-        chain.doFilter(req, res);
-
-        res.copyBodyToResponse();
+    /**
+     * Filtro que envuelve request/response para poder leer
+     * el JSON completo (entrada y salida) usando
+     * ContentCachingRequestWrapper / ResponseWrapper.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public FilterRegistrationBean<Filter> cachingFilter() {
+        FilterRegistrationBean<Filter> bean = new FilterRegistrationBean<>();
+        bean.setFilter(new CachingFilter());
+        bean.addUrlPatterns("/*");
+        bean.setName("log-writer-caching-filter");
+        bean.setOrder(Ordered.HIGHEST_PRECEDENCE); // primero en la cadena
+        return bean;
     }
 }
