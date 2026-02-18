@@ -1,4 +1,15 @@
-SELECT ROUTINE_NAME, DATA_TYPE
-FROM QSYS2.SYSPARMS
-WHERE ROUTINE_SCHEMA = 'BCAH96'
-AND ROUTINE_NAME = 'SP_DATOS_CLIENTE_CUENTA'
+package com.mycompany.logwriter.config;
+
+import com.mycompany.logwriter.interceptor.LogInterceptor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.*;
+
+@Configuration
+public class LogAutoConfiguration implements WebMvcConfigurer {
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new LogInterceptor())
+                .addPathPatterns("/**");
+    }
+}
