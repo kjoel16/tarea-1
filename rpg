@@ -1,63 +1,42 @@
-@startuml
-title Flujo completo - API Spring Boot + AS400 + Deploy en Linux con Nginx
+package com.mycompany.logwriter;
 
-actor Developer
-participant "PC Desarrollo\n(Spring Boot)" as DEV
-participant "Windows Server\n(5.246)" as WIN
-participant "AS400" as AS400
-participant "Linux Server\n(5.148)" as LINUX
-participant "Nginx" as NGINX
-participant "Cliente HTTP" as CLIENT
+import java.io.File;
+import java.io.FileWriter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-== Desarrollo y Debug ==
+public class LogWriterLib {
 
-Developer -> DEV : Crear API Spring Boot
-Developer -> DEV : Configurar conexión AS400
-Developer -> DEV : Crear DTOs y TransaccionService
-Developer -> DEV : Debug paso a paso
+    // Ruta base donde se guardarán los logs
+    private static final String BASE_PATH = "C:/logs";
 
-DEV -> AS400 : ProgramCall(params[])
-AS400 --> DEV : Respuesta (codError, descError)
+    public static void log(String project, String controller, String message) {
 
-Developer -> DEV : Validar parámetros PI RPG
-Developer -> DEV : Ajustar tamaños AS400Text
-Developer -> DEV : Confirmar conexión exitosa
+        try {
+            LocalDate today = LocalDate.now();
+            int hour = LocalDateTime.now().getHour();
 
-== Empaquetado ==
+            // Estructura:
+            // /logs/proyecto/controlador/fecha/
+            String path = BASE_PATH + "/" + project + "/" + controller + "/" + today;
 
-Developer -> DEV : mvn clean package
-DEV -> DEV : Genera JAR (target/*.jar)
+            File folder = new File(path);
 
-Developer -> WIN : Copiar proyecto
-WIN -> WIN : Ejecutar JAR de prueba
-WIN -> AS400 : Llamar programa RPG
-AS400 --> WIN : Respuesta correcta
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
 
-== Transferencia de JAR ==
+            // Archivo por hora
+            String fileName = path + "/" + hour + ".txt";
 
-Developer -> DEV : Descargar JAR a PC
-DEV -> LINUX : scp API.jar /opt/
+            FileWriter writer = new FileWriter(fileName, true);
 
-== Despliegue en Linux ==
+            writer.write(LocalDateTime.now() + " -> " + message + "\n");
 
-Developer -> LINUX : SSH login
-Developer -> LINUX : Instalar JDK 21
-Developer -> LINUX : Ejecutar\njava -jar API.jar &
+            writer.close();
 
-LINUX -> LINUX : API corre en puerto 8080
-
-== Configuración Nginx ==
-
-Developer -> NGINX : Configurar reverse proxy
-NGINX -> LINUX : Redirigir a localhost:8080
-
-== Consumo final ==
-
-CLIENT -> NGINX : HTTP Request
-NGINX -> LINUX : Forward request
-LINUX -> AS400 : ProgramCall(params)
-AS400 --> LINUX : Respuesta
-LINUX --> NGINX : JSON Response
-NGINX --> CLIENT : JSON Response
-
-@enduml
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
