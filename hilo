@@ -1,59 +1,29 @@
-package com.mycompany.logwriter;
+package com.mycompany.logwriter.config;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
-public class LogWriterLib {
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-    public static void log(String endpoint,
-                           String method,
-                           String requestBody,
-                           String responseBody,
-                           int status,
-                           long timeMs) {
+public class CachingFilter implements Filter {
 
-        try {
+    @Override
+    public void doFilter(ServletRequest request,
+                         ServletResponse response,
+                         FilterChain chain)
+            throws IOException, ServletException {
 
-            String basePath = System.getProperty("user.dir") + "/logs/";
-            Files.createDirectories(Paths.get(basePath));
+        ContentCachingRequestWrapper requestWrapper =
+                new ContentCachingRequestWrapper((HttpServletRequest) request);
 
-            String date = LocalDate.now().toString();
-            String hour = LocalTime.now().format(DateTimeFormatter.ofPattern("HH"));
+        ContentCachingResponseWrapper responseWrapper =
+                new ContentCachingResponseWrapper((HttpServletResponse) response);
 
-            String filePath = basePath + "log-" + date + "-" + hour + ".txt";
+        chain.doFilter(requestWrapper, responseWrapper);
 
-            BufferedWriter writer = new BufferedWriter(
-                    new FileWriter(filePath, true)
-            );
-
-            writer.write("Endpoint: " + endpoint);
-            writer.newLine();
-            writer.write("Method: " + method);
-            writer.newLine();
-            writer.write("Status: " + status);
-            writer.newLine();
-            writer.write("Tiempo(ms): " + timeMs);
-            writer.newLine();
-            writer.write("Request JSON:");
-            writer.newLine();
-            writer.write(requestBody);
-            writer.newLine();
-            writer.write("Response JSON:");
-            writer.newLine();
-            writer.write(responseBody);
-            writer.newLine();
-            writer.write("====================================================");
-            writer.newLine();
-            writer.flush();
-            writer.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        responseWrapper.copyBodyToResponse();
     }
 }
