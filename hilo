@@ -1,86 +1,31 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+package com.mycompany.logwriter.config;
 
-    <modelVersion>4.0.0</modelVersion>
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
-    <!-- IDENTIDAD DEL PROYECTO -->
-    <groupId>com.mycompany</groupId>
-    <artifactId>API-01-Transaccions</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <name>API-01-Transaccions</name>
-    <description>API de integración con AS400 - Transacciones</description>
-    <packaging>jar</packaging>
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-    <!-- SPRING BOOT BASE -->
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
-        <relativePath/>
-    </parent>
+@Component
+public class CachingFilter implements Filter {
 
-    <!-- JAVA -->
-    <properties>
-        <java.version>21</java.version>
-    </properties>
+    @Override
+    public void doFilter(ServletRequest request,
+                         ServletResponse response,
+                         FilterChain chain)
+            throws IOException, ServletException {
 
-    <!-- DEPENDENCIAS -->
-    <dependencies>
+        ContentCachingRequestWrapper requestWrapper =
+                new ContentCachingRequestWrapper((HttpServletRequest) request);
 
-        <!-- API REST -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
+        ContentCachingResponseWrapper responseWrapper =
+                new ContentCachingResponseWrapper((HttpServletResponse) response);
 
-        <!-- VALIDACIONES (RECOMENDADO) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
+        chain.doFilter(requestWrapper, responseWrapper);
 
-        <!-- JT400 (CONEXION AS400) -->
-        <dependency>
-            <groupId>net.sf.jt400</groupId>
-            <artifactId>jt400</artifactId>
-            <version>11.2</version>
-        </dependency>
-
-        <!-- LOMBOK (OPCIONAL PERO MUY RECOMENDADO) -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- TEST -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
-
-    <!-- BUILD -->
-    <build>
-        <plugins>
-
-            <!-- COMPILADOR JAVA -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-
-            <!-- SPRING BOOT JAR EJECUTABLE -->
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-
-        </plugins>
-    </build>
-
-</project>
+        responseWrapper.copyBodyToResponse();
+    }
+}
