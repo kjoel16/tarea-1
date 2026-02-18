@@ -1,20 +1,48 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+package com.mycompany.logwriter.interceptor;
 
-    <modelVersion>4.0.0</modelVersion>
+import com.mycompany.logwriter.LogWriterLib;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerInterceptor;
 
-    <groupId>com.mycompany</groupId>
-    <artifactId>log-writer-lib</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+public class LogInterceptor implements HandlerInterceptor {
 
-    <name>log-writer-lib</name>
+    private static final String START = "startTime";
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-    </properties>
+    @Override
+    public boolean preHandle(HttpServletRequest request,
+                             HttpServletResponse response,
+                             Object handler) {
 
-</project>
+        request.setAttribute(START, System.currentTimeMillis());
+        return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request,
+                                HttpServletResponse response,
+                                Object handler,
+                                Exception ex) {
+
+        long start = (long) request.getAttribute(START);
+        long timeMs = System.currentTimeMillis() - start;
+
+        String project = System.getProperty("spring.application.name", "unknown-project");
+        String controller = handler.getClass().getSimpleName();
+        String method = request.getMethod();
+        String endpoint = request.getRequestURI();
+        String ip = request.getRemoteAddr();
+        int status = response.getStatus();
+
+        LogWriterLib.log(
+                project,
+                controller,
+                method,
+                endpoint,
+                ip,
+                "",
+                status,
+                timeMs
+        );
+    }
+}
