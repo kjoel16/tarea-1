@@ -1,12 +1,66 @@
-166.178.5.246
-166.178.5.189
-166.178.5.243
-166.178.5.241
-166.178.5.240
-166.178.5.89
-166.178.5.137
-166.178.1.73
-166.178.6.23
-166.178.5.29
-166.178.5.69
-166.178.5.33
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
+
+public static void log(String endpoint,
+                       String method,
+                       String requestBody,
+                       String responseBody,
+                       int status,
+                       long timeMs) {
+
+    try {
+
+        // Timestamp
+        String timestamp = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+
+        // GUID
+        String guid = UUID.randomUUID().toString();
+
+        // Carpeta: C:/logs/endpoint/
+        String basePath = "C:/logs/" + endpoint + "/";
+
+        // Nombre carpeta ejecución: guid_timestamp
+        String executionFolder = basePath + guid + "_" + timestamp + "/";
+
+        // Crear carpetas
+        Files.createDirectories(Paths.get(executionFolder));
+
+        // Archivo log
+        String filePath = executionFolder + "log.txt";
+
+        BufferedWriter writer = new BufferedWriter(
+                new FileWriter(filePath, true)
+        );
+
+        writer.write("Endpoint: " + endpoint);
+        writer.newLine();
+
+        writer.write("Method: " + method);
+        writer.newLine();
+
+        writer.write("Status: " + status);
+        writer.newLine();
+
+        writer.write("Tiempo ms: " + timeMs);
+        writer.newLine();
+
+        writer.write("Request:");
+        writer.newLine();
+        writer.write(requestBody);
+        writer.newLine();
+
+        writer.write("Response:");
+        writer.newLine();
+        writer.write(responseBody);
+        writer.newLine();
+
+        writer.close();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
