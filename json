@@ -1,4 +1,2 @@
-org.springframework.boot.autoconfigure.AutoConfiguration.imports
-
-
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.mycompany.logwriter.config.LogAutoConfiguration
