@@ -1,75 +1,52 @@
-public class LogInterceptor implements HandlerInterceptor {
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-    private static final String START = "startTime";
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
+
+import java.io.IOException;
+
+public class CachingFilter implements Filter {
 
     @Override
-    public boolean preHandle(HttpServletRequest request,
-                             HttpServletResponse response,
-                             Object handler) {
+    public void doFilter(ServletRequest request,
+                         ServletResponse response,
+                         FilterChain chain)
+            throws IOException, ServletException {
 
-        long start = System.currentTimeMillis();
-        request.setAttribute(START, start);
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        // 🔥 LOG INICIAL (aunque AS400 se cuelgue)
-        try {
+        ContentCachingRequestWrapper requestWrapper;
+        ContentCachingResponseWrapper responseWrapper;
 
-            LogWriterLib.log(
-                    request.getRequestURI(),
-                    request.getMethod(),
-                    "REQUEST INICIADO",
-                    "",
-                    0,
-                    0
-            );
-
-            System.out.println("LOG INICIAL GUARDADO");
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        // 🔥 Evita doble wrapping
+        if (request instanceof ContentCachingRequestWrapper) {
+            requestWrapper = (ContentCachingRequestWrapper) request;
+        } else {
+            requestWrapper = new ContentCachingRequestWrapper(httpRequest);
         }
 
-        return true;
-    }
-
-
-    @Override
-    public void afterCompletion(HttpServletRequest request,
-                                HttpServletResponse response,
-                                Object handler,
-                                Exception ex) {
+        if (response instanceof ContentCachingResponseWrapper) {
+            responseWrapper = (ContentCachingResponseWrapper) response;
+        } else {
+            responseWrapper = new ContentCachingResponseWrapper(httpResponse);
+        }
 
         try {
 
-            long start = (long) request.getAttribute(START);
-            long timeMs = System.currentTimeMillis() - start;
+            chain.doFilter(requestWrapper, responseWrapper);
 
-            String requestBody = "";
-            String responseBody = "";
+        } finally {
 
-            if (request instanceof ContentCachingRequestWrapper wrapper) {
-                byte[] buf = wrapper.getContentAsByteArray();
-                requestBody = new String(buf, StandardCharsets.UTF_8);
-            }
+            // 🔥 CRÍTICO: sin esto el body no se envía al cliente
+            responseWrapper.copyBodyToResponse();
 
-            if (response instanceof ContentCachingResponseWrapper wrapper) {
-                byte[] buf = wrapper.getContentAsByteArray();
-                responseBody = new String(buf, StandardCharsets.UTF_8);
-            }
-
-            // 🔥 LOG FINAL
-            LogWriterLib.log(
-                    request.getRequestURI(),
-                    request.getMethod(),
-                    requestBody,
-                    responseBody,
-                    response.getStatus(),
-                    timeMs
-            );
-
-            System.out.println("LOG FINAL GUARDADO");
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }
