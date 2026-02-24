@@ -1,2 +1,4 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.mycompany.logwriter.config.LogAutoConfiguration
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+
+@AutoConfiguration
+public class LogAutoConfiguration implements WebMvcConfigurer {
