@@ -1,4 +1,75 @@
-import org.springframework.boot.autoconfigure.AutoConfiguration;
+public class LogInterceptor implements HandlerInterceptor {
 
-@AutoConfiguration
-public class LogAutoConfiguration implements WebMvcConfigurer {
+    private static final String START = "startTime";
+
+    @Override
+    public boolean preHandle(HttpServletRequest request,
+                             HttpServletResponse response,
+                             Object handler) {
+
+        long start = System.currentTimeMillis();
+        request.setAttribute(START, start);
+
+        // 🔥 LOG INICIAL (aunque AS400 se cuelgue)
+        try {
+
+            LogWriterLib.log(
+                    request.getRequestURI(),
+                    request.getMethod(),
+                    "REQUEST INICIADO",
+                    "",
+                    0,
+                    0
+            );
+
+            System.out.println("LOG INICIAL GUARDADO");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public void afterCompletion(HttpServletRequest request,
+                                HttpServletResponse response,
+                                Object handler,
+                                Exception ex) {
+
+        try {
+
+            long start = (long) request.getAttribute(START);
+            long timeMs = System.currentTimeMillis() - start;
+
+            String requestBody = "";
+            String responseBody = "";
+
+            if (request instanceof ContentCachingRequestWrapper wrapper) {
+                byte[] buf = wrapper.getContentAsByteArray();
+                requestBody = new String(buf, StandardCharsets.UTF_8);
+            }
+
+            if (response instanceof ContentCachingResponseWrapper wrapper) {
+                byte[] buf = wrapper.getContentAsByteArray();
+                responseBody = new String(buf, StandardCharsets.UTF_8);
+            }
+
+            // 🔥 LOG FINAL
+            LogWriterLib.log(
+                    request.getRequestURI(),
+                    request.getMethod(),
+                    requestBody,
+                    responseBody,
+                    response.getStatus(),
+                    timeMs
+            );
+
+            System.out.println("LOG FINAL GUARDADO");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
