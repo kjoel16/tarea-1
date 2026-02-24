@@ -14,29 +14,17 @@ import java.io.IOException;
 public class CachingFilter implements Filter {
 
     @Override
-    public void doFilter(ServletRequest request,
-                         ServletResponse response,
-                         FilterChain chain)
+    public void doFilter(
+            ServletRequest request,
+            ServletResponse response,
+            FilterChain chain)
             throws IOException, ServletException {
 
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        ContentCachingRequestWrapper requestWrapper =
+                new ContentCachingRequestWrapper((HttpServletRequest) request);
 
-        ContentCachingRequestWrapper requestWrapper;
-        ContentCachingResponseWrapper responseWrapper;
-
-        // 🔥 Evita doble wrapping
-        if (request instanceof ContentCachingRequestWrapper) {
-            requestWrapper = (ContentCachingRequestWrapper) request;
-        } else {
-            requestWrapper = new ContentCachingRequestWrapper(httpRequest);
-        }
-
-        if (response instanceof ContentCachingResponseWrapper) {
-            responseWrapper = (ContentCachingResponseWrapper) response;
-        } else {
-            responseWrapper = new ContentCachingResponseWrapper(httpResponse);
-        }
+        ContentCachingResponseWrapper responseWrapper =
+                new ContentCachingResponseWrapper((HttpServletResponse) response);
 
         try {
 
@@ -44,7 +32,7 @@ public class CachingFilter implements Filter {
 
         } finally {
 
-            // 🔥 CRÍTICO: sin esto el body no se envía al cliente
+            // ESTA LINEA ES LA QUE TE FALTA
             responseWrapper.copyBodyToResponse();
 
         }
