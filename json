@@ -3,4 +3,4 @@
 JAVA=/usr/bin/java
 APP=/opt/apisModCajaJav/API-02-Consulta-1.0-SNAPSHOT.jar
 
-$JAVA -Xms256m -Xmx512m -jar $APP --server.port=10050
+exec $JAVA -XX:+UseSerialGC -Xms256m -Xmx512m -jar $APP --server.port=10050
