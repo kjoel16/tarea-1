@@ -1,5 +1,353 @@
+Te voy a dejar una documentación completa y estructurada de lo que hicimos para montar tu API Spring Boot en el servidor. La idea es que esto te sirva para:
+	•	Montar nuevas APIs
+	•	Actualizar APIs existentes
+	•	Entender cómo funciona el despliegue
+	•	Poder replicarlo en otros servidores
+
+Voy a estructurarlo como si fuera una guía técnica interna.
+
+⸻
+
+1. Descripción general de la arquitectura
+
+La API fue desplegada en un servidor Linux corporativo con las siguientes características:
+
+Componentes utilizados
+	•	Servidor: Linux Enterprise (kernel 4.18)
+	•	Seguridad activa:
+	•	SELinux (enforcing)
+	•	Protección PaX / grsecurity
+	•	Java utilizado:
+	•	JDK 21 (Oracle)
+	•	Framework de la API:
+	•	Spring Boot
+	•	Servidor web embebido:
+	•	Tomcat (embebido en Spring Boot)
+	•	Puerto de ejecución de la API:
+	•	10050
+	•	Método de ejecución:
+	•	Script bash + nohup
+	•	Autoinicio:
+	•	crontab @reboot
+
+⸻
+
+2. Problema encontrado inicialmente
+
+Al intentar levantar la API con systemd, el servicio fallaba con el error:
+
+Failed to mark memory page as executable
+Error occurred during initialization of VM
+check if grsecurity/Pax is enabled
+
+Esto ocurre porque:
+	•	systemd ejecuta el proceso bajo políticas más estrictas
+	•	el kernel bloquea el uso de memoria ejecutable (JIT)
+	•	Java necesita ejecutar JIT compilation
+
+Por esta razón systemd no pudo ejecutar Java correctamente.
+
+⸻
+
+3. Solución implementada
+
+Se decidió ejecutar la API mediante:
+
+nohup java -jar
+
+y gestionar el arranque mediante:
+
+cron @reboot
+
+Esto evita conflictos con:
+	•	SELinux
+	•	PaX
+	•	restricciones del kernel
+
+⸻
+
+4. Estructura del despliegue
+
+La API se almacena en la siguiente ruta:
+
+/opt/apisModCajaJav
+
+Dentro de esta carpeta se encuentran:
+
+/opt/apisModCajaJav
+│
+├── API-02-Consulta-1.0-SNAPSHOT.jar
+├── start.sh
+└── api.log
+
+
+⸻
+
+5. Script de arranque
+
+Archivo:
+
+/opt/apisModCajaJav/start.sh
+
+Contenido:
+
 #!/bin/bash
 
 cd /opt/apisModCajaJav
 
-nohup /usr/lib/jvm/jdk-21.0.10-oracle-x64/bin/java -jar API-02-Consulta-1.0-SNAPSHOT.jar --server.port=10050 > api.log 2>&1 &
+nohup /usr/lib/jvm/jdk-21.0.10-oracle-x64/bin/java \
+-jar API-02-Consulta-1.0-SNAPSHOT.jar \
+--server.port=10050 \
+>> api.log 2>&1 &
+
+Explicación de cada parte:
+
+Elemento	Función
+cd	posiciona el script en la carpeta
+nohup	evita que el proceso muera al cerrar sesión
+java -jar	ejecuta la API
+server.port	define el puerto
+>> api.log	guarda logs
+2>&1	guarda errores
+&	ejecuta en segundo plano
+
+
+⸻
+
+6. Permisos del script
+
+Para que el script pueda ejecutarse:
+
+sudo chmod +x /opt/apisModCajaJav/start.sh
+
+
+⸻
+
+7. Ejecución manual de la API
+
+Para levantar la API manualmente:
+
+/opt/apisModCajaJav/start.sh
+
+
+⸻
+
+8. Verificación de que la API está corriendo
+
+Ver procesos Java:
+
+ps -ef | grep java
+
+Ver logs:
+
+tail -f /opt/apisModCajaJav/api.log
+
+
+⸻
+
+9. Configuración de arranque automático
+
+Para que la API inicie cuando el servidor reinicia:
+
+crontab -e
+
+Agregar la línea:
+
+@reboot /opt/apisModCajaJav/start.sh
+
+Guardar y salir.
+
+Verificar:
+
+crontab -l
+
+Resultado esperado:
+
+@reboot /opt/apisModCajaJav/start.sh
+
+
+⸻
+
+10. Flujo de arranque del servidor
+
+Cuando el servidor reinicia ocurre lo siguiente:
+
+Servidor inicia
+     ↓
+Cron se ejecuta
+     ↓
+start.sh
+     ↓
+java -jar
+     ↓
+Spring Boot inicia
+     ↓
+Tomcat embebido abre puerto
+     ↓
+API disponible
+
+
+⸻
+
+11. Cómo actualizar una API existente
+
+Cuando se realicen cambios en el código.
+
+Paso 1 — Generar el nuevo JAR
+
+Desde el proyecto:
+
+mvn clean package
+
+Esto generará:
+
+target/API-02-Consulta-1.0-SNAPSHOT.jar
+
+
+⸻
+
+Paso 2 — Copiar al servidor
+
+Copiar el nuevo jar:
+
+scp API-02-Consulta-1.0-SNAPSHOT.jar usuario@servidor:/opt/apisModCajaJav
+
+
+⸻
+
+Paso 3 — Detener la API actual
+
+Buscar proceso:
+
+ps -ef | grep java
+
+Matar proceso:
+
+kill -9 PID
+
+
+⸻
+
+Paso 4 — Reemplazar el jar
+
+Sobrescribir el archivo.
+
+⸻
+
+Paso 5 — Levantar nuevamente
+
+/opt/apisModCajaJav/start.sh
+
+
+⸻
+
+12. Cómo montar una nueva API
+
+Ejemplo nueva API:
+
+API-03-Pagos
+
+Crear carpeta:
+
+sudo mkdir /opt/apisPagos
+
+Copiar jar:
+
+API-03-Pagos.jar
+
+Crear script:
+
+nano /opt/apisPagos/start.sh
+
+Contenido:
+
+#!/bin/bash
+
+cd /opt/apisPagos
+
+nohup java -jar API-03-Pagos.jar --server.port=10060 >> api.log 2>&1 &
+
+Permisos:
+
+chmod +x start.sh
+
+Agregar al cron:
+
+crontab -e
+
+Agregar:
+
+@reboot /opt/apisPagos/start.sh
+
+
+⸻
+
+13. Puertos recomendados
+
+API	Puerto
+Consulta	10050
+Pagos	10060
+Clientes	10070
+
+
+⸻
+
+14. Diagnóstico de errores
+
+Ver logs
+
+tail -f api.log
+
+
+⸻
+
+Ver si puerto está ocupado
+
+netstat -tulpn | grep 10050
+
+
+⸻
+
+Ver proceso Java
+
+ps -ef | grep java
+
+
+⸻
+
+15. Buenas prácticas
+
+✔ Mantener cada API en su propia carpeta
+✔ Usar un puerto diferente por API
+✔ Guardar logs en la misma carpeta
+✔ Usar nohup siempre
+✔ No usar systemd si el servidor tiene PaX
+
+⸻
+
+16. Mejoras recomendadas (producción)
+
+Se puede mejorar el script para:
+	•	evitar múltiples instancias
+	•	controlar PID
+	•	reiniciar automáticamente
+	•	manejar rotación de logs
+
+⸻
+
+17. Resultado final
+
+Con esta configuración logramos:
+	•	Ejecutar Spring Boot con Java 21
+	•	Evitar conflictos con SELinux
+	•	Evitar bloqueo por PaX
+	•	Levantar la API automáticamente al reiniciar
+	•	Tener logs persistentes
+	•	Facilitar despliegues futuros
+
+⸻
+
+Si quieres, en el siguiente paso puedo darte también:
+	•	Una arquitectura profesional para múltiples APIs en el mismo servidor
+	•	Configuración completa con NGINX como gateway
+	•	estructura de carpetas usada en producción (muy usada en bancos).
