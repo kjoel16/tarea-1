@@ -1,66 +1,46 @@
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
+import java.io.IOException;
 
-public static void log(String endpoint,
-                       String method,
-                       String requestBody,
-                       String responseBody,
-                       int status,
-                       long timeMs) {
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
-    try {
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
-        // Timestamp
-        String timestamp = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+public class CachingFilter implements Filter {
 
-        // GUID
-        String guid = UUID.randomUUID().toString();
+    @Override
+    public void doFilter(
+            ServletRequest request,
+            ServletResponse response,
+            FilterChain chain
+    ) throws IOException, ServletException {
 
-        // Carpeta: C:/logs/endpoint/
-        String basePath = "C:/logs/" + endpoint + "/";
+        ContentCachingRequestWrapper requestWrapper =
+                new ContentCachingRequestWrapper((HttpServletRequest) request);
 
-        // Nombre carpeta ejecución: guid_timestamp
-        String executionFolder = basePath + guid + "_" + timestamp + "/";
+        ContentCachingResponseWrapper responseWrapper =
+                new ContentCachingResponseWrapper((javax.servlet.http.HttpServletResponse) response);
 
-        // Crear carpetas
-        Files.createDirectories(Paths.get(executionFolder));
+        try {
 
-        // Archivo log
-        String filePath = executionFolder + "log.txt";
+            chain.doFilter(requestWrapper, responseWrapper);
 
-        BufferedWriter writer = new BufferedWriter(
-                new FileWriter(filePath, true)
-        );
+            byte[] responseArray = responseWrapper.getContentAsByteArray();
 
-        writer.write("Endpoint: " + endpoint);
-        writer.newLine();
+            String responseBody = new String(
+                    responseArray,
+                    responseWrapper.getCharacterEncoding()
+            );
 
-        writer.write("Method: " + method);
-        writer.newLine();
+            request.setAttribute("responseBody", responseBody);
 
-        writer.write("Status: " + status);
-        writer.newLine();
+        } finally {
 
-        writer.write("Tiempo ms: " + timeMs);
-        writer.newLine();
-
-        writer.write("Request:");
-        writer.newLine();
-        writer.write(requestBody);
-        writer.newLine();
-
-        writer.write("Response:");
-        writer.newLine();
-        writer.write(responseBody);
-        writer.newLine();
-
-        writer.close();
-
-    } catch (Exception e) {
-        e.printStackTrace();
+            responseWrapper.copyBodyToResponse();
+        }
     }
 }
