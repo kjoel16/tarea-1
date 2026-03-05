@@ -1,6 +1,5 @@
-ExecStart=/usr/lib/jvm/jdk-21.0.10-oracle-x64/bin/java \
--XX:+UnlockExperimentalVMOptions \
--XX:+UseContainerSupport \
--XX:-UseJVMCICompiler \
--jar /opt/apisModCajaJav/API-02-Consulta-1.0-SNAPSHOT.jar \
---server.port=10050
+#!/bin/bash
+
+cd /opt/apisModCajaJav
+
+nohup /usr/lib/jvm/jdk-21.0.10-oracle-x64/bin/java -jar API-02-Consulta-1.0-SNAPSHOT.jar --server.port=10050 > api.log 2>&1 &
