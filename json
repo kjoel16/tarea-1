@@ -1,6 +1,19 @@
-#!/bin/bash
+server {
 
-JAVA=/usr/bin/java
-APP=/opt/apisModCajaJav/API-02-Consulta-1.0-SNAPSHOT.jar
+    listen 80;
 
-exec $JAVA -XX:+UseSerialGC -Xms256m -Xmx512m -jar $APP --server.port=10050
+    server_name _;
+
+    location /api/consulta {
+
+        proxy_pass http://127.0.0.1:10050;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+    }
+
+}
