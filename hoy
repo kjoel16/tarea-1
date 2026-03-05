@@ -1,14 +1,1 @@
-[Unit]
-Description=API Modernizacion Caja
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/apisModCajaJav
-ExecStart=/opt/apisModCajaJav/start.sh
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
+ExecStart=/usr/bin/java -Djava.security.egd=file:/dev/./urandom -XX:+UseSerialGC -jar /opt/apisModCajaJav/API-02-Consulta-1.0-SNAPSHOT.jar --server.port=10050
