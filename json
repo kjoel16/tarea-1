@@ -1,40 +1,70 @@
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import java.nio.charset.StandardCharsets;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.util.ContentCachingRequestWrapper;
-import org.springframework.web.util.ContentCachingResponseWrapper;
 
-import java.io.IOException;
+public class LogInterceptor implements HandlerInterceptor {
 
-public class CachingFilter implements Filter {
+    private static final String START = "startTime";
 
     @Override
-    public void doFilter(
-            ServletRequest request,
-            ServletResponse response,
-            FilterChain chain)
-            throws IOException, ServletException {
+    public boolean preHandle(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Object handler
+    ) {
 
-        ContentCachingRequestWrapper requestWrapper =
-                new ContentCachingRequestWrapper((HttpServletRequest) request);
+        long start = System.currentTimeMillis();
+        request.setAttribute(START, start);
 
-        ContentCachingResponseWrapper responseWrapper =
-                new ContentCachingResponseWrapper((HttpServletResponse) response);
+        return true;
+    }
+
+    @Override
+    public void afterCompletion(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Object handler,
+            Exception ex
+    ) {
 
         try {
 
-            chain.doFilter(requestWrapper, responseWrapper);
+            long start = (long) request.getAttribute(START);
+            long timeMs = System.currentTimeMillis() - start;
 
-        } finally {
+            String requestBody = "";
+            String responseBody = "";
 
-            // ESTA LINEA ES LA QUE TE FALTA
-            responseWrapper.copyBodyToResponse();
+            if (request instanceof ContentCachingRequestWrapper wrapper) {
 
+                byte[] buf = wrapper.getContentAsByteArray();
+
+                if (buf.length > 0) {
+                    requestBody = new String(buf, StandardCharsets.UTF_8);
+                }
+            }
+
+            Object responseAttribute = request.getAttribute("responseBody");
+
+            if (responseAttribute != null) {
+                responseBody = responseAttribute.toString();
+            }
+
+            LogWriterLib.log(
+                    request.getRequestURI(),
+                    request.getMethod(),
+                    requestBody,
+                    responseBody,
+                    response.getStatus(),
+                    timeMs
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
