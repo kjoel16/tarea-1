@@ -1,70 +1,11 @@
-import java.nio.charset.StandardCharsets;
+location /api/modernizacionCaja/ {
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+    proxy_pass http://localhost:10050/api/modernizacionCaja/;
 
-import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.util.ContentCachingRequestWrapper;
+    proxy_http_version 1.1;
 
-public class LogInterceptor implements HandlerInterceptor {
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
-    private static final String START = "startTime";
-
-    @Override
-    public boolean preHandle(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler
-    ) {
-
-        long start = System.currentTimeMillis();
-        request.setAttribute(START, start);
-
-        return true;
-    }
-
-    @Override
-    public void afterCompletion(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            Exception ex
-    ) {
-
-        try {
-
-            long start = (long) request.getAttribute(START);
-            long timeMs = System.currentTimeMillis() - start;
-
-            String requestBody = "";
-            String responseBody = "";
-
-            if (request instanceof ContentCachingRequestWrapper wrapper) {
-
-                byte[] buf = wrapper.getContentAsByteArray();
-
-                if (buf.length > 0) {
-                    requestBody = new String(buf, StandardCharsets.UTF_8);
-                }
-            }
-
-            Object responseAttribute = request.getAttribute("responseBody");
-
-            if (responseAttribute != null) {
-                responseBody = responseAttribute.toString();
-            }
-
-            LogWriterLib.log(
-                    request.getRequestURI(),
-                    request.getMethod(),
-                    requestBody,
-                    responseBody,
-                    response.getStatus(),
-                    timeMs
-            );
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }
