@@ -1,49 +1,17 @@
-@PostMapping
-public ResponseDTO ejecutar(@RequestBody RequestDTO request) throws Exception {
+@Configuration
+public class CorsConfig {
 
-    long start = System.currentTimeMillis();
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
 
-    TransaccionDataDTO data =
-            new ObjectMapper().convertValue(
-                    request.getData(),
-                    TransaccionDataDTO.class
-            );
-
-    TransaccionResultDTO result = service.ejecutar(data);
-
-    String guid = UUID.randomUUID().toString();
-
-    long end = System.currentTimeMillis();
-    long time = end - start;
-
-    // Header Response
-    HeaderResponseDTO header = new HeaderResponseDTO();
-
-    header.setStatusCode(result.getCodErr());
-    header.setMessage(result.getDescErr());
-    header.setGuidRes(guid);
-    header.setProcessingtime(String.valueOf(time));
-    header.setTimestamp(String.valueOf(start));
-
-
-    // ===============================
-    // COPIAR HEADER COMPLETO REQUEST
-    // ===============================
-
-    Header requestHeader =
-            new ObjectMapper().convertValue(
-                    request.getHeader(),
-                    Header.class
-            );
-
-    header.setHeader(requestHeader);
-
-
-    // Response final
-    ResponseDTO response = new ResponseDTO();
-
-    response.setHeader(header);
-    response.setData(result);
-
-    return response;
+                registry.addMapping("/**")
+                        .allowedOrigins("*")
+                        .allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
+                        .allowedHeaders("*");
+            }
+        };
+    }
 }
