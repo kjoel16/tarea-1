@@ -1,8 +1,216 @@
-// Supongamos que tu objeto principal se llama 'response'
-if (response.Totals != null && response.Totals.Length > 1)
-{
-    response.Totals = response.Totals
-        .OrderBy(t => t.Total.Currency == "HNL" ? 0 : 1)
-        .ThenBy(t => t.Total.Currency == "USD" ? 1 : 2)
-        .ToArray();
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<title>Lab Caja</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f2f4f8;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
 }
+
+.card{
+background:white;
+padding:30px;
+width:400px;
+border-radius:10px;
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+h2{
+margin-top:0;
+text-align:center;
+}
+
+.field{
+margin-bottom:15px;
+}
+
+label{
+display:block;
+margin-bottom:5px;
+}
+
+input,select{
+width:100%;
+padding:10px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#007bff;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#0056b3;
+}
+
+#pantalla2{
+display:none;
+}
+
+.success{
+background:#e6ffed;
+padding:10px;
+margin-bottom:15px;
+border-radius:5px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<!-- PANTALLA 1 -->
+
+<div id="pantalla1">
+
+<h2>Consulta Cuenta</h2>
+
+<div class="field">
+<label>Número de Cuenta</label>
+<input id="cuenta" maxlength="12">
+</div>
+
+<div class="field">
+<label>Tipo de Cuenta</label>
+<select id="tipoCuenta">
+<option value="1">Ahorro</option>
+<option value="6">Cheque</option>
+</select>
+</div>
+
+<button onclick="consultar()">Consultar</button>
+
+</div>
+
+<!-- PANTALLA 2 -->
+
+<div id="pantalla2">
+
+<h2>Datos de Cuenta</h2>
+
+<div class="success">
+Cuenta encontrada
+</div>
+
+<div class="field">
+<label>Nombre</label>
+<input id="nombre">
+</div>
+
+<div class="field">
+<label>Teléfono</label>
+<input id="telefono">
+</div>
+
+<div class="field">
+<label>Identidad</label>
+<input id="identidad">
+</div>
+
+<div class="field">
+<label>Cuenta</label>
+<input id="cuentaRes">
+</div>
+
+<div class="field">
+<label>Tipo Cuenta</label>
+<input id="tipoCuentaRes">
+</div>
+
+<div class="field">
+<label>Saldo</label>
+<input id="saldo">
+</div>
+
+<div class="field">
+<label>Estado</label>
+<input id="estado">
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const API_URL = "http://166.178.5.148/api/modernizacionCaja/consultaCuenta"
+
+document.getElementById("cuenta").addEventListener("input",function(){
+
+this.value=this.value.replace(/\D/g,'')
+
+})
+
+async function consultar(){
+
+const cuenta = document.getElementById("cuenta").value
+const tipoCuenta = document.getElementById("tipoCuenta").value
+
+const body = {
+
+header:{
+hrequestid:"JTELLER-"+crypto.randomUUID(),
+hagencia:"PRINCIPAL DAV",
+hterminal:"TERM001",
+horganization:"DAVIVIENDA",
+huserid:"0808",
+hprovider:"INI",
+hsessionid:"CAJA-"+Date.now(),
+hclientip:"166.178.89.46",
+htimestamp:new Date().toISOString()
+},
+
+data:{
+cuenta:cuenta,
+tipoCuenta:tipoCuenta
+}
+
+}
+
+const response = await fetch(API_URL,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(body)
+})
+
+const result = await response.json()
+
+const data = result.data
+
+document.getElementById("nombre").value = data.nombre
+document.getElementById("telefono").value = data.telefono
+document.getElementById("identidad").value = data.identidad
+document.getElementById("cuentaRes").value = data.cuenta
+document.getElementById("tipoCuentaRes").value = data.tipCuenta
+document.getElementById("saldo").value = data.saldActual
+document.getElementById("estado").value = data.estadoC
+
+document.getElementById("pantalla1").style.display="none"
+document.getElementById("pantalla2").style.display="block"
+
+}
+
+</script>
+
+</body>
+</html>
