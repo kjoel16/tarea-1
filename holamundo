@@ -1,212 +1,328 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
+
 <meta charset="UTF-8">
-<title>Lab Caja</title>
+<title>Caja Bancaria - Transacción</title>
 
 <style>
 
 body{
-font-family: Arial;
-background:#f2f4f8;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
+font-family:'Segoe UI',sans-serif;
+background:#f0f2f5;
+margin:0;
+padding:20px;
 }
 
-.card{
+.container{
+max-width:950px;
+margin:auto;
 background:white;
-padding:30px;
-width:400px;
-border-radius:10px;
-box-shadow:0 5px 15px rgba(0,0,0,0.2);
+padding:25px;
+border-radius:8px;
 }
 
-h2{
-margin-top:0;
-text-align:center;
+.header{
+border-bottom:2px solid #ed1c24;
+margin-bottom:20px;
+padding-bottom:10px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:12px;
 }
 
 .field{
-margin-bottom:15px;
+display:flex;
+flex-direction:column;
+}
+
+.span-2{
+grid-column:span 2;
+}
+
+.span-3{
+grid-column:span 3;
+}
+
+.span-4{
+grid-column:span 4;
 }
 
 label{
-display:block;
-margin-bottom:5px;
+font-size:11px;
+font-weight:bold;
+color:#666;
+margin-bottom:3px;
+text-transform:uppercase;
 }
 
-input,select{
-width:100%;
-padding:10px;
+input{
+padding:8px;
 border:1px solid #ccc;
-border-radius:6px;
+border-radius:4px;
+font-size:13px;
 }
 
-button{
-width:100%;
-padding:12px;
-background:#007bff;
+input[readonly]{
+background:#f1f1f1;
+border-color:#ddd;
+}
+
+.btn-group{
+margin-top:25px;
+display:flex;
+gap:10px;
+}
+
+.btn-primary{
+background:#28a745;
 color:white;
 border:none;
-border-radius:6px;
+padding:12px 25px;
+border-radius:4px;
 cursor:pointer;
 }
 
-button:hover{
-background:#0056b3;
+.btn-back{
+background:#6c757d;
+color:white;
+border:none;
+padding:12px 25px;
+border-radius:4px;
+cursor:pointer;
 }
 
-#pantalla2{
+.message{
+margin-top:20px;
+padding:15px;
+background:#28a745;
+color:white;
 display:none;
-}
-
-.success{
-background:#e6ffed;
-padding:10px;
-margin-bottom:15px;
-border-radius:5px;
+font-weight:bold;
+text-align:center;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<div class="card">
+<div class="container">
 
-<!-- PANTALLA 1 -->
+<div class="header">
+<h2>Registro de Transacción</h2>
+</div>
 
-<div id="pantalla1">
-
-<h2>Consulta Cuenta</h2>
+<div class="grid">
 
 <div class="field">
-<label>Número de Cuenta</label>
-<input id="cuenta" maxlength="12">
-</div>
-
-<div class="field">
-<label>Tipo de Cuenta</label>
-<select id="tipoCuenta">
-<option value="1">Ahorro</option>
-<option value="6">Cheque</option>
-</select>
-</div>
-
-<button onclick="consultar()">Consultar</button>
-
-</div>
-
-<!-- PANTALLA 2 -->
-
-<div id="pantalla2">
-
-<h2>Datos de Cuenta</h2>
-
-<div class="success">
-Cuenta encontrada
+<label>No de cuenta</label>
+<input type="text" id="f1" readonly>
 </div>
 
 <div class="field">
-<label>Nombre</label>
-<input id="nombre">
+<label>Moneda</label>
+<input type="text" id="f2" readonly>
+</div>
+
+<div class="field span-2">
+<label>Nombre del cliente</label>
+<input type="text" id="f3" readonly>
 </div>
 
 <div class="field">
-<label>Teléfono</label>
-<input id="telefono">
+<label>Efectivo</label>
+<input type="number" id="f4" value="0">
 </div>
 
 <div class="field">
-<label>Identidad</label>
-<input id="identidad">
+<label>Chq Nuestro Cargo</label>
+<input type="number" id="f5" value="0">
 </div>
 
 <div class="field">
-<label>Cuenta</label>
-<input id="cuentaRes">
+<label>Chq Otros Bancos</label>
+<input type="number" id="f6" value="0">
 </div>
 
 <div class="field">
-<label>Tipo Cuenta</label>
-<input id="tipoCuentaRes">
+<label>Chq Exterior</label>
+<input type="number" id="f7" value="0">
 </div>
 
 <div class="field">
-<label>Saldo</label>
-<input id="saldo">
+<label>Monto Transacción</label>
+<input type="number" id="f8">
 </div>
 
 <div class="field">
-<label>Estado</label>
-<input id="estado">
+<label>Línea de libreta</label>
+<input type="text" id="f9">
 </div>
 
+<div class="field">
+<label>Saldo en libreta</label>
+<input type="text" id="f10" readonly>
+</div>
+
+<div class="field">
+<label>Número de libreta</label>
+<input type="text" id="f11">
+</div>
+
+<div class="field">
+<label>Rubro</label>
+<input type="text" id="f12">
+</div>
+
+<div class="field">
+<label>Tipo Identificación</label>
+<input type="text" id="f13" readonly>
+</div>
+
+<div class="field">
+<label>Identificación</label>
+<input type="text" id="f14" readonly>
+</div>
+
+<div class="field span-2">
+<label>Nombre del depositante</label>
+<input type="text" id="f15">
+</div>
+
+<div class="field span-4">
+<label>Comentario</label>
+<input type="text" id="f16">
+</div>
+
+</div>
+
+<div class="btn-group">
+
+<button class="btn-back" onclick="window.location.href='index.html'">
+Atrás
+</button>
+
+<button id="btnprimary" class="btn-primary" onclick="ejecutar()">
+Completar Operación
+</button>
+
+</div>
+
+<div id="msg" class="message">
+Transacción Exitosa
 </div>
 
 </div>
 
 <script>
 
-const API_URL = "http://166.178.5.148/api/modernizacionCaja/consultaCuenta"
+const API_URL="http://166.178.5.148/api/transaccion/DepositoConLibSinLib";
 
-document.getElementById("cuenta").addEventListener("input",function(){
+window.onload=function(){
 
-this.value=this.value.replace(/\D/g,'')
+const dataStr=localStorage.getItem("datosCuenta");
 
-})
+if(!dataStr)return;
 
-async function consultar(){
+const data=JSON.parse(dataStr);
 
-const cuenta = document.getElementById("cuenta").value
-const tipoCuenta = document.getElementById("tipoCuenta").value
+document.getElementById("f1").value=data.cuenta || "";
+document.getElementById("f2").value=data.mondCuenta==="0"?"LEMPIRAS":"DÓLARES";
+document.getElementById("f3").value=data.nombre || "";
+document.getElementById("f10").value=data.saldActual || "";
+document.getElementById("f13").value=data.tipCuenta || "";
+document.getElementById("f14").value=data.identidad || "";
 
-const body = {
+};
 
-header:{
-hrequestid:"JTELLER-"+crypto.randomUUID(),
-hagencia:"PRINCIPAL DAV",
-hterminal:"TERM001",
-horganization:"DAVIVIENDA",
-huserid:"0808",
-hprovider:"INI",
-hsessionid:"CAJA-"+Date.now(),
-hclientip:"166.178.89.46",
-htimestamp:new Date().toISOString()
-},
+async function ejecutar(){
+
+const btn=document.getElementById("btnprimary");
+
+const dataStr=localStorage.getItem("datosCuenta");
+if(!dataStr)return;
+
+const data=JSON.parse(dataStr);
+
+btn.disabled=true;
+btn.innerText="Procesando...";
+
+const requestBody={
 
 data:{
-cuenta:cuenta,
-tipoCuenta:tipoCuenta
-}
+
+terminal:"BRT13502",
+usuario:"CAJA1050",
+cajero:"1050",
+codTrn:"021B",
+
+monedaTrn:data.mondCuenta,
+
+cuenta:document.getElementById("f1").value,
+
+efectivo:document.getElementById("f4").value,
+
+montoTransaccion:document.getElementById("f8").value,
+
+saldoLibreta:data.saldActual,
+
+numeroLibreta:document.getElementById("f11").value,
+
+nombreCliente:data.nombre,
+
+chequesNuestroCargoDeposito:document.getElementById("f5").value,
+
+chequesOtrosBancosDeposito:document.getElementById("f6").value,
+
+chequesExterior:document.getElementById("f7").value,
+
+lineaLibreta:document.getElementById("f9").value,
+
+rubro:document.getElementById("f12").value,
+
+tipoIdentificacion:data.tipCuenta,
+
+identificacion:data.identidad,
+
+nombreDepositante:document.getElementById("f15").value,
+
+comentario:document.getElementById("f16").value
 
 }
 
-const response = await fetch(API_URL,{
+};
+
+try{
+
+const response=await fetch(API_URL,{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
 },
-body:JSON.stringify(body)
-})
+body:JSON.stringify(requestBody)
+});
 
-const result = await response.json()
+if(!response.ok){
+throw new Error("Error servidor");
+}
 
-const data = result.data
+const result=await response.json();
 
-document.getElementById("nombre").value = data.nombre
-document.getElementById("telefono").value = data.telefono
-document.getElementById("identidad").value = data.identidad
-document.getElementById("cuentaRes").value = data.cuenta
-document.getElementById("tipoCuentaRes").value = data.tipCuenta
-document.getElementById("saldo").value = data.saldActual
-document.getElementById("estado").value = data.estadoC
+document.getElementById("msg").style.display="block";
 
-document.getElementById("pantalla1").style.display="none"
-document.getElementById("pantalla2").style.display="block"
+}catch(error){
+
+alert("Error en la transacción");
+
+}
+
+btn.disabled=false;
+btn.innerText="Completar Operación";
 
 }
 
