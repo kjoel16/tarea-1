@@ -1,108 +1,63 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
 <meta charset="UTF-8">
-<title>Caja Bancaria - Transacción</title>
+<title>Caja Bancaria</title>
 
 <style>
 
+:root{
+--primary:#ed1c24;
+--bg:#f4f4f4;
+}
+
 body{
 font-family:'Segoe UI',sans-serif;
-background:#f0f2f5;
+background:var(--bg);
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
 margin:0;
-padding:20px;
 }
 
-.container{
-max-width:950px;
-margin:auto;
+.card{
 background:white;
-padding:25px;
-border-radius:8px;
-}
-
-.header{
-border-bottom:2px solid #ed1c24;
-margin-bottom:20px;
-padding-bottom:10px;
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:12px;
-}
-
-.field{
-display:flex;
-flex-direction:column;
-}
-
-.span-2{
-grid-column:span 2;
-}
-
-.span-3{
-grid-column:span 3;
-}
-
-.span-4{
-grid-column:span 4;
-}
-
-label{
-font-size:11px;
-font-weight:bold;
-color:#666;
-margin-bottom:3px;
-text-transform:uppercase;
-}
-
-input{
-padding:8px;
-border:1px solid #ccc;
-border-radius:4px;
-font-size:13px;
-}
-
-input[readonly]{
-background:#f1f1f1;
-border-color:#ddd;
-}
-
-.btn-group{
-margin-top:25px;
-display:flex;
-gap:10px;
-}
-
-.btn-primary{
-background:#28a745;
-color:white;
-border:none;
-padding:12px 25px;
-border-radius:4px;
-cursor:pointer;
-}
-
-.btn-back{
-background:#6c757d;
-color:white;
-border:none;
-padding:12px 25px;
-border-radius:4px;
-cursor:pointer;
-}
-
-.message{
-margin-top:20px;
-padding:15px;
-background:#28a745;
-color:white;
-display:none;
-font-weight:bold;
+padding:30px;
+border-radius:10px;
+box-shadow:0 4px 15px rgba(0,0,0,0.1);
+width:380px;
+border-top:5px solid var(--primary);
 text-align:center;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+background:var(--primary);
+color:white;
+border:none;
+border-radius:5px;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+opacity:0.9;
+}
+
+.menu button{
+margin-bottom:10px;
+}
+
+.logo{
+width:220px;
+margin-bottom:20px;
+}
+
+.hidden{
+display:none;
 }
 
 </style>
@@ -111,218 +66,83 @@ text-align:center;
 
 <body>
 
-<div class="container">
+<div class="card">
 
-<div class="header">
-<h2>Registro de Transacción</h2>
-</div>
+<!-- PANTALLA INICIO -->
+<div id="pantallaInicio">
 
-<div class="grid">
+<img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Davivienda_logo.svg/512px-Davivienda_logo.svg.png">
 
-<div class="field">
-<label>No de cuenta</label>
-<input type="text" id="f1" readonly>
-</div>
-
-<div class="field">
-<label>Moneda</label>
-<input type="text" id="f2" readonly>
-</div>
-
-<div class="field span-2">
-<label>Nombre del cliente</label>
-<input type="text" id="f3" readonly>
-</div>
-
-<div class="field">
-<label>Efectivo</label>
-<input type="number" id="f4" value="0">
-</div>
-
-<div class="field">
-<label>Chq Nuestro Cargo</label>
-<input type="number" id="f5" value="0">
-</div>
-
-<div class="field">
-<label>Chq Otros Bancos</label>
-<input type="number" id="f6" value="0">
-</div>
-
-<div class="field">
-<label>Chq Exterior</label>
-<input type="number" id="f7" value="0">
-</div>
-
-<div class="field">
-<label>Monto Transacción</label>
-<input type="number" id="f8">
-</div>
-
-<div class="field">
-<label>Línea de libreta</label>
-<input type="text" id="f9">
-</div>
-
-<div class="field">
-<label>Saldo en libreta</label>
-<input type="text" id="f10" readonly>
-</div>
-
-<div class="field">
-<label>Número de libreta</label>
-<input type="text" id="f11">
-</div>
-
-<div class="field">
-<label>Rubro</label>
-<input type="text" id="f12">
-</div>
-
-<div class="field">
-<label>Tipo Identificación</label>
-<input type="text" id="f13" readonly>
-</div>
-
-<div class="field">
-<label>Identificación</label>
-<input type="text" id="f14" readonly>
-</div>
-
-<div class="field span-2">
-<label>Nombre del depositante</label>
-<input type="text" id="f15">
-</div>
-
-<div class="field span-4">
-<label>Comentario</label>
-<input type="text" id="f16">
-</div>
+<button onclick="abrirMenu()">Ingresar</button>
 
 </div>
 
-<div class="btn-group">
 
-<button class="btn-back" onclick="window.location.href='index.html'">
-Atrás
+<!-- MENU -->
+<div id="menuPrincipal" class="hidden">
+
+<h2>Menú Caja</h2>
+
+<div class="menu">
+
+<button onclick="accion('Deposito a Cuenta')">
+Depósito a Cuenta
 </button>
 
-<button id="btnprimary" class="btn-primary" onclick="ejecutar()">
-Completar Operación
+<button onclick="accion('Retiros')">
+Retiros
+</button>
+
+<button onclick="accion('Cheques')">
+Cheques
+</button>
+
+<button onclick="accion('Compra y Venta de Efectivo')">
+Compra y Venta de Efectivo
+</button>
+
+<button onclick="accion('Prestamos')">
+Préstamos
+</button>
+
+<button onclick="accion('Administración de Cuentas')">
+Administración de Cuentas
 </button>
 
 </div>
 
-<div id="msg" class="message">
-Transacción Exitosa
+<button onclick="volverInicio()">Salir</button>
+
 </div>
 
 </div>
+
 
 <script>
 
-const API_URL="http://166.178.5.148/api/transaccion/DepositoConLibSinLib";
+function abrirMenu(){
 
-window.onload=function(){
-
-const dataStr=localStorage.getItem("datosCuenta");
-
-if(!dataStr)return;
-
-const data=JSON.parse(dataStr);
-
-document.getElementById("f1").value=data.cuenta || "";
-document.getElementById("f2").value=data.mondCuenta==="0"?"LEMPIRAS":"DÓLARES";
-document.getElementById("f3").value=data.nombre || "";
-document.getElementById("f10").value=data.saldActual || "";
-document.getElementById("f13").value=data.tipCuenta || "";
-document.getElementById("f14").value=data.identidad || "";
-
-};
-
-async function ejecutar(){
-
-const btn=document.getElementById("btnprimary");
-
-const dataStr=localStorage.getItem("datosCuenta");
-if(!dataStr)return;
-
-const data=JSON.parse(dataStr);
-
-btn.disabled=true;
-btn.innerText="Procesando...";
-
-const requestBody={
-
-data:{
-
-terminal:"BRT13502",
-usuario:"CAJA1050",
-cajero:"1050",
-codTrn:"021B",
-
-monedaTrn:data.mondCuenta,
-
-cuenta:document.getElementById("f1").value,
-
-efectivo:document.getElementById("f4").value,
-
-montoTransaccion:document.getElementById("f8").value,
-
-saldoLibreta:data.saldActual,
-
-numeroLibreta:document.getElementById("f11").value,
-
-nombreCliente:data.nombre,
-
-chequesNuestroCargoDeposito:document.getElementById("f5").value,
-
-chequesOtrosBancosDeposito:document.getElementById("f6").value,
-
-chequesExterior:document.getElementById("f7").value,
-
-lineaLibreta:document.getElementById("f9").value,
-
-rubro:document.getElementById("f12").value,
-
-tipoIdentificacion:data.tipCuenta,
-
-identificacion:data.identidad,
-
-nombreDepositante:document.getElementById("f15").value,
-
-comentario:document.getElementById("f16").value
+document.getElementById("pantallaInicio").style.display="none";
+document.getElementById("menuPrincipal").style.display="block";
 
 }
 
-};
 
-try{
+function volverInicio(){
 
-const response=await fetch(API_URL,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify(requestBody)
-});
-
-if(!response.ok){
-throw new Error("Error servidor");
-}
-
-const result=await response.json();
-
-document.getElementById("msg").style.display="block";
-
-}catch(error){
-
-alert("Error en la transacción");
+document.getElementById("menuPrincipal").style.display="none";
+document.getElementById("pantallaInicio").style.display="block";
 
 }
 
-btn.disabled=false;
-btn.innerText="Completar Operación";
+
+function accion(tipo){
+
+console.info("Opción seleccionada:",tipo);
+
+/* aquí luego puedes redirigir */
+
+alert("Entrando a: " + tipo);
 
 }
 
