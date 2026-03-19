@@ -29,7 +29,6 @@ body{
 
 .sidebar h2{
   color:var(--primary);
-  margin-bottom:20px;
 }
 
 .sidebar button{
@@ -41,7 +40,6 @@ body{
   text-align:left;
   cursor:pointer;
   border-radius:6px;
-  font-weight:500;
 }
 
 .sidebar button:hover{
@@ -66,6 +64,14 @@ body{
   justify-content:space-between;
 }
 
+/* INPUT */
+.header input{
+  padding:8px;
+  border-radius:5px;
+  border:1px solid #ccc;
+  width:200px;
+}
+
 /* CARDS */
 .cards{
   display:grid;
@@ -79,10 +85,6 @@ body{
   border-radius:10px;
   box-shadow:0 4px 10px rgba(0,0,0,0.05);
   border-top:5px solid var(--primary);
-}
-
-.card h3{
-  margin:0 0 10px 0;
 }
 
 .card button{
@@ -120,8 +122,17 @@ body{
   <!-- HEADER -->
   <div class="header">
     <h3>Menú Principal</h3>
-    <input type="text" placeholder="Buscar..." style="padding:8px;border-radius:5px;border:1px solid #ccc;">
+    <input 
+      type="text" 
+      placeholder="Buscar..."
+      oninput="filtrarMenu(this.value)"
+    >
   </div>
+
+  <!-- MENSAJE SIN RESULTADOS -->
+  <p id="noResultados" style="display:none; color:red;">
+    No se encontraron resultados
+  </p>
 
   <!-- CARDS -->
   <div class="cards">
@@ -145,8 +156,8 @@ body{
     </div>
 
     <div class="card">
-      <h3>Caja</h3>
-      <p>Administración de caja</p>
+      <h3>Administración de Caja</h3>
+      <p>Gestión de caja bancaria</p>
       <button onclick="accion('Administración de Caja')">Entrar</button>
     </div>
 
@@ -155,6 +166,36 @@ body{
 </div>
 
 <script>
+
+// 🔎 FILTRO POR TEXTO VISIBLE
+function filtrarMenu(texto){
+  texto = texto.toLowerCase();
+
+  const cards = document.querySelectorAll(".card");
+  let visibles = 0;
+
+  cards.forEach(card => {
+    const contenido = card.innerText.toLowerCase();
+
+    if(contenido.includes(texto)){
+      card.style.display = "block";
+      visibles++;
+    } else {
+      card.style.display = "none";
+    }
+  });
+
+  // Mostrar mensaje si no hay resultados
+  const mensaje = document.getElementById("noResultados");
+
+  if(visibles === 0){
+    mensaje.style.display = "block";
+  } else {
+    mensaje.style.display = "none";
+  }
+}
+
+// 🔀 NAVEGACIÓN
 function accion(tipo){
   console.log("Opción seleccionada:", tipo);
 
@@ -171,6 +212,7 @@ function accion(tipo){
     window.location.href = 'admincaja.html';
   }
 }
+
 </script>
 
 </body>
