@@ -5,147 +5,172 @@
 <title>Caja Bancaria</title>
 
 <style>
-
 :root{
---primary:#ed1c24;
---bg:#f4f4f4;
+  --primary:#ed1c24;
+  --bg:#f4f4f4;
+  --card:#ffffff;
 }
 
 body{
-font-family:'Segoe UI',sans-serif;
-background:var(--bg);
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-margin:0;
+  margin:0;
+  font-family:'Segoe UI', sans-serif;
+  background:var(--bg);
+  display:flex;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:220px;
+  background:#fff;
+  height:100vh;
+  padding:20px;
+  box-shadow:2px 0 10px rgba(0,0,0,0.05);
+}
+
+.sidebar h2{
+  color:var(--primary);
+  margin-bottom:20px;
+}
+
+.sidebar button{
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border:none;
+  background:none;
+  text-align:left;
+  cursor:pointer;
+  border-radius:6px;
+  font-weight:500;
+}
+
+.sidebar button:hover{
+  background:rgba(237,28,36,0.1);
+  color:var(--primary);
+}
+
+/* MAIN */
+.main{
+  flex:1;
+  padding:20px;
+}
+
+/* HEADER */
+.header{
+  background:var(--card);
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+  margin-bottom:20px;
+  display:flex;
+  justify-content:space-between;
+}
+
+/* CARDS */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:20px;
 }
 
 .card{
-background:white;
-padding:30px;
-border-radius:10px;
-box-shadow:0 4px 15px rgba(0,0,0,0.1);
-width:380px;
-border-top:5px solid var(--primary);
-text-align:center;
+  background:var(--card);
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+  border-top:5px solid var(--primary);
 }
 
-button{
-width:100%;
-padding:12px;
-margin-top:10px;
-background:var(--primary);
-color:white;
-border:none;
-border-radius:5px;
-font-weight:bold;
-cursor:pointer;
+.card h3{
+  margin:0 0 10px 0;
 }
 
-button:hover{
-opacity:0.9;
+.card button{
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  background:var(--primary);
+  color:white;
+  border-radius:5px;
+  cursor:pointer;
+  width:100%;
 }
 
-.menu button{
-margin-bottom:10px;
+.card button:hover{
+  opacity:0.9;
 }
-
-.logo{
-width:220px;
-margin-bottom:20px;
-}
-
-.hidden{
-display:none;
-}
-
 </style>
-
 </head>
 
 <body>
 
-<div class="card">
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>LabCaja</h2>
 
-<!-- PANTALLA INICIO -->
-<div id="pantallaInicio">
-
-<img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Davivienda_logo.svg/512px-Davivienda_logo.svg.png">
-
-<button onclick="abrirMenu()">Ingresar</button>
-
+  <button onclick="accion('Deposito a Cuenta')">💰 Depósito</button>
+  <button onclick="accion('Retiros')">💸 Retiros</button>
+  <button onclick="accion('Cheques')">📄 Cheques</button>
+  <button onclick="accion('Administración de Caja')">🏦 Caja</button>
 </div>
 
+<!-- MAIN -->
+<div class="main">
 
-<!-- MENU -->
-<div id="menuPrincipal" class="hidden">
+  <!-- HEADER -->
+  <div class="header">
+    <h3>Menú Principal</h3>
+    <input type="text" placeholder="Buscar..." style="padding:8px;border-radius:5px;border:1px solid #ccc;">
+  </div>
 
-<h2>Menú Caja</h2>
+  <!-- CARDS -->
+  <div class="cards">
 
-<div class="menu">
+    <div class="card">
+      <h3>Depósito</h3>
+      <p>Realizar depósitos a cuentas</p>
+      <button onclick="accion('Deposito a Cuenta')">Entrar</button>
+    </div>
 
-<button onclick="accion('Deposito a Cuenta')">
-Depósito a Cuenta
-</button>
+    <div class="card">
+      <h3>Retiros</h3>
+      <p>Retirar dinero de cuentas</p>
+      <button onclick="accion('Retiros')">Entrar</button>
+    </div>
 
-<button onclick="accion('Retiros')">
-Retiros
-</button>
+    <div class="card">
+      <h3>Cheques</h3>
+      <p>Consulta de cheques</p>
+      <button onclick="accion('Cheques')">Entrar</button>
+    </div>
 
-<button onclick="accion('Cheques')">
-Cheques
-</button>
+    <div class="card">
+      <h3>Caja</h3>
+      <p>Administración de caja</p>
+      <button onclick="accion('Administración de Caja')">Entrar</button>
+    </div>
 
-<button onclick="accion('Compra y Venta de Efectivo')">
-Compra y Venta de Efectivo
-</button>
-
-<button onclick="accion('Prestamos')">
-Préstamos
-</button>
-
-<button onclick="accion('Administración de Cuentas')">
-Administración de Cuentas
-</button>
+  </div>
 
 </div>
-
-<button onclick="volverInicio()">Salir</button>
-
-</div>
-
-</div>
-
 
 <script>
-
-function abrirMenu(){
-
-document.getElementById("pantallaInicio").style.display="none";
-document.getElementById("menuPrincipal").style.display="block";
-
-}
-
-
-function volverInicio(){
-
-document.getElementById("menuPrincipal").style.display="none";
-document.getElementById("pantallaInicio").style.display="block";
-
-}
-
-
 function accion(tipo){
+  console.log("Opción seleccionada:", tipo);
 
-console.info("Opción seleccionada:",tipo);
-
-/* aquí luego puedes redirigir */
-
-alert("Entrando a: " + tipo);
-
+  if (tipo === "Deposito a Cuenta"){
+    window.location.href = 'index.html';
+  }
+  if (tipo === "Retiros"){
+    window.location.href = 'retirosConCuenta.html';
+  }
+  if (tipo === "Cheques"){
+    window.location.href = 'consultaCheque.html';
+  }
+  if (tipo === "Administración de Caja"){
+    window.location.href = 'admincaja.html';
+  }
 }
-
 </script>
 
 </body>
